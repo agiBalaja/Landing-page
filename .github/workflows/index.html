@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Landing Page | Links</title>
+    <!-- Menggunakan font Google Fonts -->
+    <link href="https://fonts.googleapis.com" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            /* Background gradient yang cantik */
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            /* Efek Glassmorphism */
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 40px 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        .profile-img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            margin-bottom: 15px;
+            object-fit: cover;
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .links-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .link-card {
+            display: block;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            text-decoration: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .link-card:hover {
+            transform: translateY(-3px);
+            background: #fff;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            color: #764ba2;
+        }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Foto Profil (Ganti URL gambar jika perlu) -->
+        <img src="https://z-m-scontent.fdjb2-1.fna.fbcdn.net/v/t39.30808-1/616814479_1656489212381096_5972581909825197815_n.jpg?stp=cp0_dst-jpg_e15_p200x200_q65_tt6&_nc_cat=104&ccb=1-7&_nc_sid=fe59b0&efg=eyJpIjoidCJ9&_nc_eui2=AeFNeRMiaf4p8ijP6GMQq31-52-GoJ9nMXnnb4agn2cxeaqQbMtZs4hBaP1L8oBZKzve0n7vPEJM2rJTqOTYhr_q&_nc_ohc=g9KS-u4XCtkQ7kNvwEQFod8&_nc_oc=Adq6AAZizbimrY2yiyyufxspGf5EcO1yRB5fIgG21RaOms5l0j6e911nYoFn7fFS8Gw&tn=dxZVJv1Hx5x7_u5W&_nc_ad=z-m&_nc_cid=1225&_nc_eh=027b32ae1c3970c93e5f8fdd9893d25b&_nc_zt=24&_nc_rml=0&_nc_ht=z-m-scontent.fdjb2-1.fna&_nc_gid=BVqjeG6RZx1zaNHdrKbzXQ&_nc_ss=7a3a8&oh=00_Af3AIpmytRH4kf0BIGcQxnBF51co8K5U3jGdZ1BKtcOPcA&oe=69D3B785" alt="Profile Picture" class="profile-img">
+        
+        <h1>Tools bekerja lapangan</h1>
+        <p>Efektif efisien</p>
+
+        <div class="links-container">
+            <!-- Daftar Link -->
+            <a href="https://agibalaja.github.io/Sistem-Verkom-Pendidikan-PKH/" class="link-card" target="_blank">Sistem-Verkom-Pendidikan-PKH</a>
+            <a href="https://agibalaja.github.io/SISTEM-DAFTAR-HADIR-P2K2/" class="link-card" target="_blank">SISTEM-DAFTAR-HADIR-P2K2</a>
+            <a href="https://agibalaja.github.io/Konversi-Absensi-Excel-ke-Format-Template/" class="link-card" target="_blank">Konversi-Absensi-Excel-ke-Format-Template</a>
+            <a href="https://agibalaja.github.io/Image-Resizer-Pro/" class="link-card" target="_blank">Image-Resizer-Pro</a>
+            <a href="https://agibalaja.github.io/EXIF-Viewer-with-Map-Preview/" class="link-card" target="_blank">EXIF-Viewer-with-Map-Preview</a>
+            <a href="https://agibalaja.github.io/Aplikasi-Scan-Dokumen-Web/" class="link-card" target="_blank">Aplikasi-Scan-Dokumen-Web</a>
+            <a href="https://agibalaja.github.io/Konversi-Data-ke-Tabel/" class="link-card" target="_blank">Konversi-Data-ke-Tabel</a
+        </div>
+
+        <div class="footer">
+            &copy; 2026 MyLinks Landing Page
+        </div>
+    </div>
+
+</body>
+</html>
