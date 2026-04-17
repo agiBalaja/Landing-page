@@ -14,6 +14,53 @@
     <!-- Original Font Link (preserved as is) -->
     <link href="https://fonts.googleapis.com" rel="stylesheet">
     <!-- ORIGINAL STYLES (untouched) -->
+
+<!-- 1. METADATA UNTUK INSTALL DI HP -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#3b82f6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tools Lapangan">
+<link rel="manifest" href="manifest.json">
+
+<!-- 2. TOMBOL INSTALL (akan muncul otomatis di browser) -->
+<script>
+// Menampilkan prompt install jika browser support
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  
+  // Buat tombol install kustom (opsional)
+  const installBtn = document.createElement('button');
+  installBtn.textContent = '📲 Install Aplikasi';
+  installBtn.style.position = 'fixed';
+  installBtn.style.bottom = '20px';
+  installBtn.style.right = '20px';
+  installBtn.style.zIndex = '9999';
+  installBtn.style.padding = '12px 20px';
+  installBtn.style.backgroundColor = '#3b82f6';
+  installBtn.style.color = 'white';
+  installBtn.style.border = 'none';
+  installBtn.style.borderRadius = '40px';
+  installBtn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+  installBtn.style.fontWeight = 'bold';
+  installBtn.style.cursor = 'pointer';
+  
+  installBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log(`User response: ${outcome}`);
+      deferredPrompt = null;
+      installBtn.remove();
+    }
+  });
+  
+  document.body.appendChild(installBtn);
+});
+</script>
+    
     <style>
         * {
             margin: 0;
