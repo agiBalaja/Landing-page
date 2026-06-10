@@ -182,10 +182,71 @@ window.addEventListener('beforeinstallprompt', (e) => {
             background-color: #0a0a2a; /* deep fallback, but canvas will overlay */
         }
     </style>
+
+    <!-- ========== MODIFIKASI GRID & TEKS LEBIH KECIL (tanpa mengubah script) ========== -->
+    <style>
+        /* Container dibuat lebih lebar agar grid 2 kolom nyaman */
+        .container {
+            max-width: 560px;
+            padding: 30px 16px;
+        }
+
+        /* Mengubah link container menjadi grid responsif 2 kolom */
+        .links-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        /* Teks di link card lebih kecil & padding lebih hemat agar banyak link terbaca */
+        .link-card {
+            padding: 10px 6px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-align: center;
+            border-radius: 14px;
+            word-break: break-word;
+            line-height: 1.3;
+        }
+
+        /* Hover efek tetap halus */
+        .link-card:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Untuk layar sangat sempit (HP kecil) tetap 2 kolom dengan teks super kecil */
+        @media (max-width: 480px) {
+            .container {
+                max-width: 100%;
+                padding: 20px 12px;
+            }
+            .link-card {
+                font-size: 0.65rem;
+                padding: 8px 4px;
+            }
+        }
+
+        /* Pastikan judul dan deskripsi tetap proporsional */
+        h1 {
+            font-size: 22px;
+        }
+        p {
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+        .profile-img {
+            width: 80px;
+            height: 80px;
+        }
+        .footer {
+            margin-top: 24px;
+            font-size: 10px;
+        }
+    </style>
 </head>
 <body>
 
-    <!-- ORIGINAL LANDING PAGE CONTENT (completely unchanged) -->
+    <!-- ORIGINAL LANDING PAGE CONTENT (struktur HTML tidak diubah, hanya CSS yang dimodifikasi) -->
     <div class="container">
         <!-- Foto Profil (Ganti URL gambar jika perlu) -->
         <img src="https://avatars.githubusercontent.com/u/35713532?s=400&u=90c3d92e40688131f2460270ef4b637e6bba0b27&v=4" alt="Profile Picture" class="profile-img">
@@ -216,7 +277,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
         </div>
     </div>
 
-    <!-- ========== DYNAMIC PARTICLE BACKGROUND SCRIPT (Merged & Enhanced) ========== -->
+    <!-- ========== DYNAMIC PARTICLE BACKGROUND SCRIPT (TIDAK DIUBAH) ========== -->
     <script>
         (function() {
             // --- Setup Canvas (As animated background) ---
