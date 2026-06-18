@@ -1,0 +1,735 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Jadwal PKH Bulanan • Pop-up Detail Kegiatan</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+            background: #eef2f9;
+            padding: 20px;
+            color: #1e2f3e;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(125deg, #0f3b5c, #2c6e9e);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        .header p {
+            color: #3e6a8c;
+            margin-top: 8px;
+        }
+        .jam-kerja {
+            background: #fff7e8;
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin: 15px 0;
+        }
+        .badge-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .badge {
+            background: white;
+            border-radius: 40px;
+            padding: 5px 14px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+        .badge.hijau { background: #d4edda; color: #155724; }
+        .badge.biru { background: #cce5ff; color: #004085; }
+        .badge.kuning { background: #fff3cd; color: #856404; }
+        .badge.ungu { background: #e2d5f5; color: #4a1d6d; }
+
+        /* Week Cards */
+        .week-card {
+            background: white;
+            border-radius: 24px;
+            margin-bottom: 35px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        }
+        .week-title {
+            background: #0f3b5c;
+            color: white;
+            padding: 14px 20px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .week-title small {
+            font-size: 0.8rem;
+            font-weight: normal;
+            opacity: 0.9;
+            background: rgba(255,255,255,0.2);
+            padding: 4px 12px;
+            border-radius: 30px;
+        }
+
+        /* Tabel */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            background: #f1f5f9;
+            padding: 12px 10px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #1e4a6e;
+            border-bottom: 2px solid #ddd;
+        }
+        td {
+            padding: 10px 10px;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: top;
+            font-size: 0.85rem;
+        }
+        .hari-col {
+            font-weight: 700;
+            background: #fafcff;
+            width: 75px;
+            text-align: center;
+        }
+        .jam-col {
+            width: 110px;
+            font-family: monospace;
+            font-weight: 600;
+            color: #c26f1a;
+        }
+        .kegiatan-col {
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .kegiatan-col:hover {
+            background: #fff7e8;
+        }
+        .p2k2-row {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+        }
+        .verif-row {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+        }
+        .target-badge {
+            display: inline-block;
+            background: #eef2fa;
+            border-radius: 20px;
+            padding: 2px 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #2c6285;
+            margin-left: 8px;
+        }
+        .lokasi {
+            font-size: 0.7rem;
+            color: #2e7d32;
+            background: #e8f5e9;
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-left: 8px;
+        }
+        .share-badge {
+            background: #e1f5fe;
+            color: #0277bd;
+        }
+
+        /* Footer */
+        .footer-note {
+            background: #f8fbfe;
+            padding: 12px 20px;
+            font-size: 0.75rem;
+            color: #5b7f9c;
+            border-top: 1px solid #e2edf5;
+            border-radius: 0 0 24px 24px;
+        }
+
+        /* MODAL POPUP */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(3px);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 32px;
+            width: 90%;
+            max-width: 450px;
+            padding: 0;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.3);
+            animation: fadeIn 0.2s ease;
+            overflow: hidden;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-header {
+            background: #0f3b5c;
+            color: white;
+            padding: 18px 20px;
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+        .modal-body {
+            padding: 20px;
+            font-size: 0.95rem;
+        }
+        .detail-item {
+            margin-bottom: 16px;
+            border-bottom: 1px solid #eef2f5;
+            padding-bottom: 12px;
+        }
+        .detail-label {
+            font-weight: 700;
+            color: #1f5e8c;
+            display: inline-block;
+            width: 90px;
+        }
+        .detail-value {
+            color: #2c3e4e;
+            font-weight: 500;
+        }
+        .modal-footer {
+            padding: 16px 20px;
+            background: #f8fbfe;
+            display: flex;
+            justify-content: flex-end;
+            border-top: 1px solid #e2edf5;
+        }
+        .close-modal-btn {
+            background: #0f3b5c;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .close-modal-btn:hover {
+            background: #1e5a7a;
+        }
+
+        /* LOGIN PAGE STYLES */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0f3b5c 0%, #1b5a7a 100%);
+            z-index: 3000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(2px);
+            transition: all 0.3s ease;
+        }
+        .login-card {
+            background: white;
+            border-radius: 40px;
+            width: 90%;
+            max-width: 400px;
+            padding: 30px 28px;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.25);
+            text-align: center;
+            animation: fadeInUp 0.4s ease;
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .login-icon {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+        }
+        .login-card h2 {
+            color: #0f3b5c;
+            margin-bottom: 8px;
+            font-size: 1.8rem;
+        }
+        .login-card p {
+            color: #5c7f9c;
+            margin-bottom: 25px;
+            font-size: 0.85rem;
+        }
+        .login-input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .login-input-group label {
+            display: block;
+            font-weight: 600;
+            color: #1e4a6e;
+            margin-bottom: 6px;
+            font-size: 0.8rem;
+        }
+        .login-input-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #cbdde9;
+            border-radius: 60px;
+            font-size: 0.9rem;
+            transition: 0.2s;
+            background: #fefefe;
+        }
+        .login-input-group input:focus {
+            outline: none;
+            border-color: #2c6e9e;
+            box-shadow: 0 0 0 3px rgba(44,110,158,0.2);
+        }
+        .login-btn {
+            background: #0f3b5c;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 12px;
+            border-radius: 60px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+        .login-btn:hover {
+            background: #1e5a7a;
+        }
+        .error-msg {
+            background: #ffebee;
+            color: #c62828;
+            padding: 10px;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            margin-top: 15px;
+            display: none;
+        }
+        .logout-bar {
+            background: #eef2f9;
+            display: flex;
+            justify-content: flex-end;
+            padding: 8px 20px;
+            border-radius: 50px;
+            margin-bottom: 20px;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 6px 18px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: 0.2s;
+        }
+        .logout-btn:hover {
+            background: #b02a37;
+        }
+        .user-info {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #1e4a6e;
+            background: white;
+            padding: 4px 14px;
+            border-radius: 40px;
+        }
+        .main-content-protected {
+            display: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 700px) {
+            body { padding: 12px; }
+            .jam-col { width: 85px; font-size: 0.7rem; }
+            .hari-col { width: 55px; font-size: 0.8rem; }
+            td, th { padding: 8px 5px; font-size: 0.75rem; }
+            .week-title { font-size: 1rem; }
+            .lokasi, .target-badge { font-size: 0.6rem; margin-left: 4px; }
+            .detail-label { width: 75px; }
+            .logout-bar { padding: 6px 15px; }
+        }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .badge-container, .jam-kerja, .modal, .logout-bar { display: none; }
+            .kegiatan-col { cursor: default; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- LAYAR LOGIN (awalnya tampil) -->
+<div id="loginOverlay" class="login-overlay">
+    <div class="login-card">
+        <div class="login-icon">🔐</div>
+        <h2>Login PKH</h2>
+        <p>Masukkan kredensial untuk mengakses jadwal kegiatan</p>
+        <div class="login-input-group">
+            <label>👤 Username</label>
+            <input type="text" id="loginUser" placeholder="admin" autocomplete="off">
+        </div>
+        <div class="login-input-group">
+            <label>🔒 Password</label>
+            <input type="password" id="loginPass" placeholder="••••••">
+        </div>
+        <button class="login-btn" id="loginBtn">Masuk ke Dashboard</button>
+        <div id="loginError" class="error-msg">❌ Username atau password salah. Coba lagi.</div>
+        <div style="font-size: 0.7rem; margin-top: 20px; color:#7795b3;">🔐 Demo: admin / pkh2025</div>
+    </div>
+</div>
+
+<!-- KONTEN UTAMA YANG DILINDUNGI (awalnya tersembunyi) -->
+<div id="protectedContent" class="main-content-protected">
+    <div class="container">
+        <div class="logout-bar">
+            <span class="user-info" id="displayUsername">👤 Pengguna</span>
+            <button class="logout-btn" id="logoutBtn">🚪 Keluar</button>
+        </div>
+        <div class="header">
+            <h1>📋 JADWAL KEGIATAN PKH – 1 BULAN</h1>
+            <p>Klik pada kegiatan → tampilkan rincian lengkap (hari, jam, target, lokasi)</p>
+            <div class="jam-kerja">🕒 Jam kerja: 08.00 – 15.30 WIB (7,5 jam) | Istirahat 12.00–13.00</div>
+            <div class="badge-container">
+                <span class="badge hijau">✅ P2K2: 15x</span>
+                <span class="badge biru">📊 Monitoring: 1x</span>
+                <span class="badge biru">✓ Verifikasi: 2x (akhir bulan)</span>
+                <span class="badge biru">🎓 Graduasi/PPSE: 2x</span>
+                <span class="badge biru">📁 Pemutakhiran Data: 3x</span>
+                <span class="badge biru">⚡ Respon Cepat: 1x</span>
+                <span class="badge biru">📄 Laporan Bulanan: 1x</span>
+                <span class="badge biru">🤝 Koordinasi: 2x</span>
+                <span class="badge ungu">📢 Share Berita Baik: setiap hari</span>
+            </div>
+        </div>
+
+        <div id="schedule-root"></div>
+        <div class="footer-note">
+            📌 <strong>Petunjuk:</strong> Klik pada baris kegiatan untuk melihat detail lengkap (hari, jam, kegiatan, target mingguan/bulanan, lokasi jika P2K2).<br>
+            🕒 <strong>Share Berita Baik</strong> dilakukan setiap hari selama 15 menit di awal jam kerja.<br>
+            ✨ <strong>Verifikasi Komitmen</strong> ditempatkan di akhir bulan (Minggu 3 & 4).
+        </div>
+    </div>
+</div>
+
+<!-- MODAL POPUP (sama seperti semula) -->
+<div id="detailModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            📌 Rincian Kegiatan
+        </div>
+        <div class="modal-body">
+            <div class="detail-item">
+                <span class="detail-label">📅 Hari</span>
+                <span class="detail-value" id="modalHari">-</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">⏰ Jam</span>
+                <span class="detail-value" id="modalJam">-</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">📋 Kegiatan</span>
+                <span class="detail-value" id="modalKegiatan">-</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">🎯 Target</span>
+                <span class="detail-value" id="modalTarget">-</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">📍 Lokasi</span>
+                <span class="detail-value" id="modalLokasi">-</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">📆 Minggu</span>
+                <span class="detail-value" id="modalMinggu">-</span>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="close-modal-btn" id="closeModalBtn">Tutup</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    // DATA JADWAL 4 MINGGU (SENIN - JUMAT) - TIDAK BERUBAH
+    // ============================================================
+    const scheduleData = [
+        { // MINGGU 1
+            name: "MINGGU 1",
+            p2k2Count: 4,
+            days: [
+                { day: "Senin", hour: "08.00-08.15", activity: "Share Berita Baik", target: "Harian (setiap hari)", isP2K2: false, lokasi: "", special: "share" },
+                { day: "Senin", hour: "08.15-12.00", activity: "Pemutakhiran Data (1)", target: "Pemutakhiran #1", isP2K2: false, lokasi: "" },
+                { day: "Senin", hour: "13.00-15.30", activity: "Monitoring Penyaluran Bansos", target: "✅ Target Monitoring", isP2K2: false, lokasi: "" },
+                { day: "Selasa", hour: "08.00-08.15", activity: "Share Berita Baik", target: "Harian (setiap hari)", isP2K2: false, lokasi: "", special: "share" },
+                { day: "Selasa", hour: "08.15-12.00", activity: "P2K2 (2 kelompok)", target: "P2K2 #1, #2", isP2K2: true, lokasi: "📍 Rantau Keloyang" },
+                { day: "Selasa", hour: "13.00-15.30", activity: "Koordinasi Tim (1)", target: "Koordinasi #1", isP2K2: false, lokasi: "" },
+                { day: "Rabu", hour: "08.00-08.15", activity: "Share Berita Baik", target: "Harian (setiap hari)", isP2K2: false, lokasi: "", special: "share" },
+                { day: "Rabu", hour: "08.15-12.00", activity: "P2K2 (1 kelompok)", target: "P2K2 #3", isP2K2: true, lokasi: "📍 Sungai Gurun" },
+                { day: "Rabu", hour: "13.00-15.30", activity: "Graduasi & PPSE (1)", target: "Graduasi #1", isP2K2: false, lokasi: "" },
+                { day: "Kamis", hour: "08.00-08.15", activity: "Share Berita Baik", target: "Harian (setiap hari)", isP2K2: false, lokasi: "", special: "share" },
+                { day: "Kamis", hour: "08.15-12.00", activity: "Pemutakhiran Data (2)", target: "Pemutakhiran #2", isP2K2: false, lokasi: "" },
+                { day: "Kamis", hour: "13.00-15.30", activity: "Tindak Lanjut Hasil Pemeriksaan", target: "Tugas tambahan", isP2K2: false, lokasi: "" },
+                { day: "Jumat", hour: "08.00-08.15", activity: "Share Berita Baik", target: "Harian (setiap hari)", isP2K2: false, lokasi: "", special: "share" },
+                { day: "Jumat", hour: "08.15-12.00", activity: "P2K2 (1 kelompok)", target: "P2K2 #4", isP2K2: true, lokasi: "📍 Sungai Beringin" },
+                { day: "Jumat", hour: "13.00-15.30", activity: "Respon Cepat / Pengaduan", target: "✅ Respon Cepat", isP2K2: false, lokasi: "" }
+            ]
+        },
+        { // MINGGU 2
+            name: "MINGGU 2",
+            p2k2Count: 5,
+            days: [
+                { day: "Senin", hour: "08.00-08.15", activity: "Share Berita Baik", target: "Harian (setiap hari)", isP2K2: false, lokasi: "", special: "share" },
+                { day: "Senin", hour: "08.15-12.00", activity: "Pemutakhiran Data (3)", target: "✅ Pemutakhiran SELESAI", isP2K2: false, lokasi: "" },
+                { day: "Senin", hour: "13.00-15.30", activity: "Sosialisasi Kebijakan", target: "Tugas tambahan", isP2K2: false, lokasi: "" },
+                { day: "Selasa", hour: "08.00-08.15", activity: "Share Berita Baik", target: "Harian (setiap hari)", isP2K2: false, lokasi: "", special: "share" },
+                { day: "Selasa", hour: "08.15-12.00", activity: "P2K2 (2 kelompok)", target: "P2K2 #5, #6", isP2K2: true, lokasi: "📍 Rantau Keloyang" },
+                { day: "Selasa", hour: "13.00-15.30", activity: "Pendampingan & Fasilitasi KPM", target: "Tugas tambahan", isP2K2: false, lokasi: "" },
+                { day: "Rabu", hour: "08.00-08.15", activity: "Share Berita Baik", target: "Harian (setiap hari)", isP2K2: false, lokasi: "", special: "share" },
+                { day: "Rabu", hour: "08.15-12.00", activity: "P2K2 (1 kelompok)", target: "P2K2 #7", isP2K2: true, lokasi: "📍 Sungai Gurun" },
+                { day: "Rabu", hour: "13.00-15.30", activity: "Koordinasi Tim (2)", target: "✅ Koordinasi SELESAI", isP2K2: false, lokasi: "" },
+                { day: "Kamis", hour: "08.00-08.15", activity: "Share Berita Baik", target: "Harian (setiap hari)", isP2K2: false, lokasi: "", special: "share" },
+                { day: "Kamis", hour: "08.15-12.00", activity: "Graduasi & PPSE (2)", target: "✅ Graduasi SELESAI", isP2K2: false, lokasi: "" },
+                { day: "Kamis", hour: "13.00-15.30", activity: "Pembuatan Laporan Bulanan", target: "✅ Laporan Bulanan", isP2K2: false, lokasi: "" },
+                { day: "Jumat", hour: "08.00-08.15", activity: "Share Berita Baik", target: "Harian (setiap hari)", isP2K2: false, lokasi: "", special: "share" },
+                { day: "Jumat", hour: "08.15-12.00", activity: "P2K2 (2 kelompok)", target: "P2K2 #8, #9", isP2K2: true, lokasi: "📍 Beringin 1 + Sekampil 1" },
+                { day: "Jumat", hour: "13.00-15.30", activity: "Supervisi Permasalahan Bansos", target: "Tugas tambahan", isP2K2: false, lokasi: "" }
+            ]
+        },
+        { // MINGGU 3
+            name: "MINGGU 3",
+            p2k2Count: 4,
+            days: [
+                { day: "Senin", hour: "08.00-08.15", activity: "Share Berita Baik", target: "Harian (setiap hari)", isP2K2: false, lokasi: "", special: "share" },
+                { day: "Senin", hour: "08.15-12.00", activity: "Penelitian Penyaluran Bansos", target: "Tugas tambahan", isP2K2: false, lokasi: "" },
+                { day: "Senin", hour: "13.00-15.30", activity: "Verifikasi Validasi Calon Penerima", target: "Tugas tambahan", isP2K2: false, lokasi: "" },
+                { day: "Selasa", hour: "08.00-08.15", activity: "Share Berita Baik", target: "Harian (setiap hari)", isP2K2: false, lokasi: "", special: "share" },
+                { day: "Selasa", hour: "08.15-12.00", activity: "P2K2 (2 kelompok)", target: "P2K2 #10, #11", isP2K2: true, lokasi: "📍 Rantau Keloyang" },
+                { day: "Selasa", hour: "13.00-15.30", activity: "Rapat Koordinasi Kecamatan", target: "Tugas tambahan", isP2K2: false, lokasi: "" },
+                { day: "Rabu", hour: "08.00-08.15", activity: "Share Berita Baik", target: "Harian (setiap hari)", isP2K2: false, lokasi: "", special: "share" },
+                { day: "Rabu", hour: "08.15-12.00", activity: "Kunjungan Lapangan (KPM)", target: "Tugas tambahan", isP2K2: false, lokasi: "" },
+                { day: "Rabu", hour: "13.00-15.30", activity: "Pelatihan Internal", target: "Tugas tambahan", isP2K2: false, lokasi: "" },
+                { day: "Kamis", hour: "08.00-08.15", activity: "Share Berita Baik", target: "Harian (setiap hari)", isP2K2: false, lokasi: "", special: "share" },
+                { day: "Kamis", hour: "08.15-12.00", activity: "Verifikasi Komitmen (1)", target: "Verifikasi #1 (akhir bulan)", isP2K2: false, lokasi: "", specialVerif: true },
+                { day: "Kamis", hour: "13.00-15.30", activity: "Penyusunan Program Bulan Depan", target: "Tugas tambahan", isP2K2: false, lokasi: "" },
+                { day: "Jumat", hour: "08.00-08.15", activity: "Share Berita Baik", target: "Harian (setiap hari)", isP2K2: false, lokasi: "", special: "share" },
+                { day: "Jumat", hour: "08.15-12.00", activity: "P2K2 (2 kelompok)", target: "P2K2 #12, #13", isP2K2: true, lokasi: "📍 Beringin 1 + Sekampil 1" },
+                { day: "Jumat", hour: "13.00-15.30", activity: "Media Sosial & Publikasi", target: "Tugas tambahan", isP2K2: false, lokasi: "" }
+            ]
+        },
+        { // MINGGU 4
+            name: "MINGGU 4",
+            p2k2Count: 2,
+            days: [
+                { day: "Senin", hour: "08.00-08.15", activity: "Share Berita Baik", target: "Harian (setiap hari)", isP2K2: false, lokasi: "", special: "share" },
+                { day: "Senin", hour: "08.15-12.00", activity: "Review & Arsip Laporan", target: "Tugas tambahan", isP2K2: false, lokasi: "" },
+                { day: "Senin", hour: "13.00-15.30", activity: "Koordinasi dengan Desa/Kelurahan", target: "Tugas tambahan", isP2K2: false, lokasi: "" },
+                { day: "Selasa", hour: "08.00-08.15", activity: "Share Berita Baik", target: "Harian (setiap hari)", isP2K2: false, lokasi: "", special: "share" },
+                { day: "Selasa", hour: "08.15-12.00", activity: "P2K2 (1 kelompok)", target: "P2K2 #14", isP2K2: true, lokasi: "📍 Rantau Keloyang" },
+                { day: "Selasa", hour: "13.00-15.30", activity: "Rapat Evaluasi Bulanan", target: "Tugas tambahan", isP2K2: false, lokasi: "" },
+                { day: "Rabu", hour: "08.00-08.15", activity: "Share Berita Baik", target: "Harian (setiap hari)", isP2K2: false, lokasi: "", special: "share" },
+                { day: "Rabu", hour: "08.15-12.00", activity: "Verifikasi Komitmen (2)", target: "✅ Verifikasi SELESAI", isP2K2: false, lokasi: "", specialVerif: true },
+                { day: "Rabu", hour: "13.00-15.30", activity: "Fasilitasi PPSE", target: "Tugas tambahan", isP2K2: false, lokasi: "" },
+                { day: "Kamis", hour: "08.00-08.15", activity: "Share Berita Baik", target: "Harian (setiap hari)", isP2K2: false, lokasi: "", special: "share" },
+                { day: "Kamis", hour: "08.15-12.00", activity: "Persiapan Data Bulan Depan", target: "Tugas tambahan", isP2K2: false, lokasi: "" },
+                { day: "Kamis", hour: "13.00-15.30", activity: "Kunjungan ke Peserta Graduasi", target: "Tugas tambahan", isP2K2: false, lokasi: "" },
+                { day: "Jumat", hour: "08.00-08.15", activity: "Share Berita Baik", target: "Harian (setiap hari)", isP2K2: false, lokasi: "", special: "share" },
+                { day: "Jumat", hour: "08.15-12.00", activity: "P2K2 (1 kelompok)", target: "P2K2 #15 ✅ SELESAI", isP2K2: true, lokasi: "📍 Sungai Beringin" },
+                { day: "Jumat", hour: "13.00-15.30", activity: "Sharing Program ke Media Sosial", target: "Tugas tambahan", isP2K2: false, lokasi: "" }
+            ]
+        }
+    ];
+
+    function getRowClass(item) {
+        if (item.isP2K2) return 'p2k2-row';
+        if (item.specialVerif) return 'verif-row';
+        return '';
+    }
+
+    function renderWeek(week) {
+        let rows = '';
+        for (let item of week.days) {
+            let rowClass = getRowClass(item);
+            let lokasiHtml = item.lokasi ? `<span class="lokasi">${item.lokasi}</span>` : '';
+            let targetHtml = `<span class="target-badge">${item.target}</span>`;
+            let shareExtra = (item.special === 'share') ? '<span class="target-badge share-badge">📢 Harian</span>' : '';
+            let dataAttr = `data-hari="${item.day}" data-jam="${item.hour}" data-kegiatan="${item.activity.replace(/"/g, '&quot;')}" data-target="${item.target.replace(/"/g, '&quot;')}" data-lokasi="${item.lokasi || '-'}" data-minggu="${week.name}"`;
+            rows += `<tr class="${rowClass} kegiatan-row" style="cursor:pointer;" ${dataAttr}>
+                        <td class="hari-col">${item.day}</td>
+                        <td class="jam-col">${item.hour}</td>
+                        <td class="kegiatan-col">${item.activity} ${lokasiHtml} ${targetHtml} ${shareExtra}</td>
+                     </tr>`;
+        }
+        return `<div class="week-card">
+                    <div class="week-title">📅 ${week.name}<small>🎯 P2K2 minggu ini: ${week.p2k2Count} kali</small></div>
+                    <table><thead><tr><th>Hari</th><th>Jam</th><th>Kegiatan & Target</th></tr></thead><tbody>${rows}</tbody></table>
+                </div>`;
+    }
+
+    function renderAllSchedules() {
+        const root = document.getElementById('schedule-root');
+        if (!root) return;
+        let html = '';
+        for (let week of scheduleData) html += renderWeek(week);
+        root.innerHTML = html;
+        attachRowClickEvents();
+    }
+
+    function showModal(hari, jam, kegiatan, target, lokasi, minggu) {
+        document.getElementById('modalHari').innerText = hari;
+        document.getElementById('modalJam').innerText = jam;
+        document.getElementById('modalKegiatan').innerText = kegiatan;
+        document.getElementById('modalTarget').innerText = target;
+        document.getElementById('modalLokasi').innerText = lokasi;
+        document.getElementById('modalMinggu').innerText = minggu;
+        document.getElementById('detailModal').style.display = 'flex';
+    }
+
+    function attachRowClickEvents() {
+        document.querySelectorAll('.kegiatan-row').forEach(row => {
+            row.addEventListener('click', (e) => {
+                const hari = row.getAttribute('data-hari') || '-';
+                const jam = row.getAttribute('data-jam') || '-';
+                const kegiatan = row.getAttribute('data-kegiatan') || '-';
+                const target = row.getAttribute('data-target') || '-';
+                const lokasi = row.getAttribute('data-lokasi') || '-';
+                const minggu = row.getAttribute('data-minggu') || '-';
+                showModal(hari, jam, kegiatan, target, lokasi, minggu);
+            });
+        });
+    }
+
+    function closeModal() {
+        document.getElementById('detailModal').style.display = 'none';
+    }
+
+    // ==================== LOGIN / AUTH SYSTEM ====================
+    const VALID_CRED = { username: "admin", password: "pkh2025" };
+
+    function setLoginState(isLoggedIn, username = "") {
+        if (isLoggedIn) {
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('protectedContent').classList.add('main-content-protected');
+            document.getElementById('protectedContent').style.display = 'block';
+            if (username) {
+                document.getElementById('displayUsername').innerHTML = `👤 ${username}`;
+            }
+            renderAllSchedules(); 
+        } else {
+            document.getElementById('loginOverlay').style.display = 'flex';
+            document.getElementById('protectedContent').style.display = 'none';
+            document.getElementById('protectedContent').classList.remove('main-content-protected');
+            document.getElementById('loginUser').value = '';
+            document.getElementById('loginPass').value = '';
+            document.getElementById('loginError').style.display = 'none';
+        }
+    }
+
+    function attemptLogin() {
+        const user = document.getElementById('loginUser').value.trim();
+        const pass = document.getElementById('loginPass').value.trim();
+        if (user === VALID_CRED.username && pass === VALID_CRED.password) {
+            sessionStorage.setItem('pkh_auth', 'true');
+            sessionStorage.setItem('pkh_user', user);
+            setLoginState(true, user);
+        } else {
+            document.getElementById('loginError').style.display = 'block';
+        }
+    }
+
+    function logout() {
+        sessionStorage.removeItem('pkh_auth');
+        sessionStorage.removeItem('pkh_user');
+        setLoginState(false);
+    }
+
+    function checkExistingSession() {
+        const auth = sessionStorage.getItem('pkh_auth');
+        if (auth === 'true') {
+            const savedUser = sessionStorage.getItem('pkh_user') || 'Pengguna';
+            setLoginState(true, savedUser);
+        } else {
+            setLoginState(false);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        checkExistingSession();
+        const loginBtn = document.getElementById('loginBtn');
+        if (loginBtn) loginBtn.addEventListener('click', attemptLogin);
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) logoutBtn.addEventListener('click', logout);
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('detailModal');
+            if (e.target === modal) closeModal();
+        });
+        const loginPassInput = document.getElementById('loginPass');
+        if (loginPassInput) {
+            loginPassInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') attemptLogin();
+            });
+        }
+        const loginUserInput = document.getElementById('loginUser');
+        if (loginUserInput) {
+            loginUserInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') attemptLogin();
+            });
+        }
+    });
+</script>
+</body>
+</html>
+```

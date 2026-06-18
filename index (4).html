@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>EXIF Explorer - Metadata & Geolocation Viewer</title>
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-DV25BYV3TL"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-DV25BYV3TL');
+</script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            min-height: 100vh;
+            padding: 32px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 1300px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(2px);
+            border-radius: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+            padding: 28px 32px;
+            transition: all 0.2s ease;
+        }
+
+        /* Header & action bar */
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            font-size: 1.9rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1e293b, #4c1d95);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        h1 i {
+            background: none;
+            background-clip: unset;
+            -webkit-background-clip: unset;
+            color: #7c3aed;
+            font-size: 2rem;
+        }
+
+        .subtitle {
+            color: #475569;
+            margin-bottom: 28px;
+            font-size: 0.95rem;
+            border-left: 4px solid #7c3aed;
+            padding-left: 16px;
+            font-weight: 500;
+        }
+
+        /* tombol reset yang menonjol */
+        .btn-reset {
+            background: linear-gradient(95deg, #dc2626, #b91c1c);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            letter-spacing: -0.2px;
+        }
+
+        .btn-reset:hover {
+            background: linear-gradient(95deg, #b91c1c, #991b1b);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px -12px #b91c1c;
+        }
+
+        .btn-reset:active {
+            transform: translateY(1px);
+        }
+
+        /* Upload area premium */
+        .upload-area {
+            background: #fefce8;
+            border: 2px dashed #cbd5e1;
+            border-radius: 28px;
+            padding: 48px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            margin-bottom: 12px;
+        }
+
+        .upload-area:hover {
+            border-color: #7c3aed;
+            background: #f5f3ff;
+            transform: scale(0.99);
+        }
+
+        #upload {
+            display: none;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+            margin-top: 28px;
+        }
+
+        .preview-card, .info-card {
+            background: #ffffff;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid #eef2ff;
+            transition: transform 0.1s ease;
+        }
+
+        .preview-header, .info-header, .map-header {
+            background: #f8fafd;
+            padding: 16px 22px;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .preview-header i, .info-header i, .map-header i {
+            color: #7c3aed;
+            font-size: 1.2rem;
+        }
+
+        .preview-image {
+            width: 100%;
+            height: 320px;
+            object-fit: contain;
+            background: #f1f5f9;
+            display: block;
+            transition: 0.2s;
+        }
+
+        .info-content {
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 0.85rem;
+            scrollbar-width: thin;
+        }
+
+        .exif-item {
+            display: flex;
+            border-bottom: 1px solid #f0f2f5;
+            padding: 10px 4px;
+            transition: background 0.1s;
+        }
+
+        .exif-item:hover {
+            background: #faf5ff;
+        }
+
+        .exif-tag {
+            font-weight: 700;
+            color: #4c1d95;
+            width: 38%;
+            text-transform: capitalize;
+            font-size: 0.82rem;
+        }
+
+        .exif-value {
+            color: #1f2937;
+            word-break: break-word;
+            width: 62%;
+            font-family: 'Inter', monospace;
+            font-size: 0.82rem;
+        }
+
+        .map-card {
+            grid-column: span 2;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            border: 1px solid #eef2ff;
+            background: #fff;
+            margin-top: 4px;
+            transition: 0.2s;
+        }
+
+        #map {
+            height: 380px;
+            width: 100%;
+            z-index: 1;
+            background: #eef2ff;
+        }
+
+        #loading {
+            display: none;
+            text-align: center;
+            background: #f1f5f9;
+            padding: 20px;
+            border-radius: 50px;
+            margin: 20px 0;
+            color: #4c1d95;
+            font-weight: 500;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .empty-metadata {
+            text-align: center;
+            padding: 32px 16px;
+            color: #64748b;
+            font-style: italic;
+        }
+
+        @media (max-width: 780px) {
+            .container {
+                padding: 20px;
+            }
+            .content-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .map-card {
+                grid-column: span 1;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            .btn-reset {
+                padding: 6px 18px;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* custom scroll */
+        .info-content::-webkit-scrollbar {
+            width: 5px;
+        }
+        .info-content::-webkit-scrollbar-track {
+            background: #eef2ff;
+            border-radius: 10px;
+        }
+        .info-content::-webkit-scrollbar-thumb {
+            background: #b9c3da;
+            border-radius: 10px;
+        }
+
+        .badge-gps {
+            background: #e9d5ff;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #5b21b6;
+        }
+    </style>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exifr@latest/dist/lite.umd.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="action-bar">
+        <h1>
+            <i class="fas fa-microchip"></i> 
+            EXIF Explorer
+        </h1>
+        <button class="btn-reset" id="btnReset">
+            <i class="fas fa-arrow-rotate-left"></i> Reset Semua
+        </button>
+    </div>
+
+    <div class="subtitle" id="subtitleText">
+        <i class="fas fa-chart-simple" style="margin-right: 8px;"></i> 
+        Unggah foto (JPEG, PNG, HEIC) — lihat metadata EXIF, GPS, dan peta interaktif tanpa API.
+    </div>
+
+    <label for="upload" class="upload-area" id="uploadArea">
+        <i class="fas fa-cloud-upload-alt" style="font-size: 52px; color: #7c3aed; margin-bottom: 16px; display: block;"></i>
+        <span style="font-weight: 600; font-size: 1.1rem;">Klik atau seret foto ke sini</span><br>
+        <small style="color: #6c757d;">Mendukung JPG, PNG, WebP, HEIC (max 50MB)</small>
+    </label>
+    <input type="file" id="upload" accept="image/jpeg,image/png,image/webp,image/heic,image/heif">
+
+    <div id="loading">
+        <i class="fas fa-spinner fa-spin" style="font-size: 1.4rem;"></i> 
+        Membaca metadata EXIF & GPS ...
+    </div>
+
+    <div class="content-grid" id="contentGrid" style="display: none;">
+        <div class="preview-card">
+            <div class="preview-header">
+                <i class="fas fa-camera"></i> Pratinjau Gambar
+            </div>
+            <img id="preview" class="preview-image" src="" alt="Pratinjau foto">
+        </div>
+
+        <div class="info-card">
+            <div class="info-header">
+                <i class="fas fa-table-list"></i> Metadata EXIF 
+                <span id="gpsIndicator" style="margin-left: auto; font-size: 0.7rem;"></span>
+            </div>
+            <div class="info-content" id="exifInfo">
+                <div class="empty-metadata">? Tidak ada data EXIF</div>
+            </div>
+        </div>
+
+        <div class="map-card" id="mapCard" style="display: none;">
+            <div class="map-header">
+                <i class="fas fa-location-dot"></i> Lokasi GPS dari Foto
+                <span id="coordStatus" style="margin-left: auto; font-size: 0.7rem; font-weight: normal;"></span>
+            </div>
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <!-- subtle footer note -->
+    <div style="margin-top: 28px; text-align: center; font-size: 0.7rem; color: #94a3b8; border-top: 1px solid #eef2ff; padding-top: 16px;">
+        <i class="fas fa-shield-alt"></i> Pribadi & offline — metadata diproses di browser Anda. Peta menggunakan OpenStreetMap (gratis).
+    </div>
+</div>
+
+<script>
+    // --- DOM elements
+    const uploadInput = document.getElementById('upload');
+    const uploadArea = document.getElementById('uploadArea');
+    const btnReset = document.getElementById('btnReset');
+    const contentGrid = document.getElementById('contentGrid');
+    const previewImg = document.getElementById('preview');
+    const exifInfoDiv = document.getElementById('exifInfo');
+    const mapCard = document.getElementById('mapCard');
+    const loadingDiv = document.getElementById('loading');
+    const gpsIndicatorSpan = document.getElementById('gpsIndicator');
+    const coordStatusSpan = document.getElementById('coordStatus');
+
+    let leafletMap = null;
+    let currentMarker = null;
+    let currentFileProcessed = false;
+
+    // --- Helper: format metadata value dengan baik
+    function formatMetadataValue(key, value) {
+        if (value === null || value === undefined) return '—';
+        if (value instanceof Date) {
+            return value.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'medium' });
+        }
+        if (typeof value === 'object') {
+            try {
+                // handle GPS terspesialisasi biar rapi
+                if (key === 'gps' && value.latitude && value.longitude) {
+                    return `Lat: ${value.latitude.toFixed(6)}, Lng: ${value.longitude.toFixed(6)} (${value.altitude ? 'Alt:'+value.altitude : ''})`;
+                }
+                let str = JSON.stringify(value, null, 0);
+                if (str.length > 70) str = str.substring(0, 67) + '...';
+                return str;
+            } catch(e) {
+                return '[Complex Data]';
+            }
+        }
+        if (typeof value === 'number' && (key.includes('latitude') || key.includes('longitude'))) {
+            return value.toFixed(6);
+        }
+        if (typeof value === 'string' && value.length > 80) {
+            return value.substring(0, 77) + '...';
+        }
+        return String(value);
+    }
+
+    // --- Membangun daftar EXIF yang ramah & informatif tanpa duplikasi besar
+    function renderExifTable(exifData) {
+        if (!exifData || Object.keys(exifData).length === 0) {
+            return '<div class="empty-metadata"><i class="fas fa-file-image"></i> Tidak ada metadata EXIF yang tersedia.<br>Foto mungkin sudah dibersihkan atau bukan dari kamera.</div>';
+        }
+
+        // Filter properti yang tidak berguna (buffer, thumbnail besar)
+        const skipKeys = ['thumbnail', 'thumbnailBuffer', 'imageBuffer', 'xmp', 'iptc', 'jfif', 'icc'];
+        let rows = '';
+        const sortedEntries = Object.entries(exifData)
+            .filter(([key]) => !skipKeys.includes(key))
+            .sort((a, b) => a[0].localeCompare(b[0]));
+
+        if (sortedEntries.length === 0) {
+            return '<div class="empty-metadata">?? Hanya metadata dasar, tidak ada TAG EXIF penting.</div>';
+        }
+
+        for (const [key, rawValue] of sortedEntries) {
+            let displayKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+            if (key === 'make') displayKey = '?? Merk Kamera';
+            if (key === 'model') displayKey = '?? Model';
+            if (key === 'lensModel') displayKey = 'Lensa';
+            if (key === 'fNumber') displayKey = 'ƒ / Bukaan';
+            if (key === 'exposureTime') displayKey = '?? Kecepatan Rana';
+            if (key === 'iso') displayKey = 'ISO';
+            if (key === 'focalLength') displayKey = '?? Fokal (mm)';
+            if (key === 'datetimeOriginal') displayKey = '?? Tanggal Asli';
+            if (key === 'gps') displayKey = '?? Koordinat GPS';
+            if (key === 'latitude') displayKey = 'Lintang (Latitude)';
+            if (key === 'longitude') displayKey = 'Bujur (Longitude)';
+
+            let renderedValue = formatMetadataValue(key, rawValue);
+            rows += `
+                <div class="exif-item">
+                    <span class="exif-tag">${displayKey}</span>
+                    <span class="exif-value">${renderedValue}</span>
+                </div>
+            `;
+        }
+        return rows;
+    }
+
+    // --- Inisialisasi peta Leaflet (tanpa API key, OSM tile)
+    function initMapWithCoordinates(lat, lng) {
+        if (!lat || !lng) return false;
+        // Validasi batas koordinat
+        if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return false;
+        
+        mapCard.style.display = 'block';
+        if (coordStatusSpan) coordStatusSpan.innerHTML = `<span class="badge-gps"><i class="fas fa-check-circle"></i> ${lat.toFixed(5)} , ${lng.toFixed(5)}</span>`;
+        
+        // Destroy peta sebelum buat baru
+        if (leafletMap !== null) {
+            leafletMap.off();
+            leafletMap.remove();
+            leafletMap = null;
+        }
+        
+        try {
+            leafletMap = L.map('map').setView([lat, lng], 14);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; CartoDB',
+                subdomains: 'abcd',
+                maxZoom: 19,
+                minZoom: 3
+            }).addTo(leafletMap);
+            
+            // Marker kustom
+            currentMarker = L.marker([lat, lng], {
+                icon: L.icon({
+                    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+                    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34],
+                })
+            }).addTo(leafletMap);
+            currentMarker.bindPopup(`<b>?? Lokasi foto</b><br>Lat: ${lat.toFixed(6)}<br>Lng: ${lng.toFixed(6)}`).openPopup();
+            
+            // Kadang render map perlu invalidate setelah ditampilkan (pastikan peta responsive)
+            setTimeout(() => {
+                if (leafletMap) leafletMap.invalidateSize();
+            }, 180);
+            return true;
+        } catch (err) {
+            console.warn("map error", err);
+            return false;
+        }
+    }
+
+    // --- Fungsi reset lengkap (tombol reset utama)
+    function resetApp() {
+        // reset input file
+        uploadInput.value = '';
+        contentGrid.style.display = 'none';
+        mapCard.style.display = 'none';
+        btnReset.style.display = 'block';      // tetap kelihatan, tapi tidak masalah
+        uploadArea.style.display = 'block';
+        previewImg.src = '';
+        exifInfoDiv.innerHTML = '<div class="empty-metadata">? Belum ada data. Unggah foto untuk melihat EXIF.</div>';
+        if (leafletMap) {
+            leafletMap.remove();
+            leafletMap = null;
+        }
+        currentMarker = null;
+        if (coordStatusSpan) coordStatusSpan.innerHTML = '';
+        if (gpsIndicatorSpan) gpsIndicatorSpan.innerHTML = '';
+        loadingDiv.style.display = 'none';
+        // hilangkan pesan error tersembunyi
+        currentFileProcessed = false;
+        
+        // replace subtitle untuk sedikit feedback
+        const subtitle = document.getElementById('subtitleText');
+        if (subtitle) {
+            subtitle.innerHTML = '<i class="fas fa-undo-alt"></i> Sesi direset. Silakan unggah foto baru untuk mengeksplorasi metadata.';
+            setTimeout(() => {
+                if (subtitle.innerHTML.includes('Sesi direset')) {
+                    subtitle.innerHTML = '<i class="fas fa-chart-simple"></i> Unggah foto (JPEG, PNG, HEIC) — lihat metadata EXIF, GPS, dan peta interaktif tanpa API.';
+                }
+            }, 2500);
+        }
+    }
+
+    // --- Proses file (EXIF dan GPS)
+    async function processFile(file) {
+        if (!file) return;
+        
+        loadingDiv.style.display = 'flex';
+        uploadArea.style.display = 'none';
+        contentGrid.style.display = 'none';   // sembunyikan dulu sampai beres
+        mapCard.style.display = 'none';
+        
+        // preview gambar (base64)
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            previewImg.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+        
+        try {
+            // Gunakan exifr untuk parsing lengkap: GPS, makernote umum, DateTime
+            const exifOutput = await exifr.parse(file, {
+                gps: true,
+                tiff: true,
+                interop: true,
+                translateKeys: true,
+                mergeOutput: true
+            });
+            
+            // pastikan konten grid tampil
+            contentGrid.style.display = 'grid';
+            btnReset.style.display = 'flex';   // tampilkan tombol reset (sudah ada)
+            
+            // jika tidak ada metadata sama sekali
+            if (!exifOutput || Object.keys(exifOutput).length === 0) {
+                exifInfoDiv.innerHTML = '<div class="empty-metadata"><i class="fas fa-eye-slash"></i> Foto ini tidak memiliki metadata EXIF yang terdeteksi.<br>Mungkin sudah diproses atau dihapus pribadi.</div>';
+                mapCard.style.display = 'none';
+                if (gpsIndicatorSpan) gpsIndicatorSpan.innerHTML = '';
+                return;
+            }
+            
+            // Ambil data GPS secara eksplisit: exifr kadang meletakkan di output.latitude/longitude atau output.gps.lat
+            let latitude = null, longitude = null;
+            if (exifOutput.latitude && exifOutput.longitude) {
+                latitude = exifOutput.latitude;
+                longitude = exifOutput.longitude;
+            } else if (exifOutput.gps && typeof exifOutput.gps === 'object') {
+                latitude = exifOutput.gps.latitude;
+                longitude = exifOutput.gps.longitude;
+            } else if (exifOutput.GPSLatitude && exifOutput.GPSLongitude) {
+                latitude = exifOutput.GPSLatitude;
+                longitude = exifOutput.GPSLongitude;
+            }
+            
+            // validasi angka desimal
+            if (latitude && longitude && !isNaN(latitude) && !isNaN(longitude) && Math.abs(latitude) <= 90 && Math.abs(longitude) <= 180) {
+                if (gpsIndicatorSpan) gpsIndicatorSpan.innerHTML = '<i class="fas fa-satellite-dish" style="color:#16a34a;"></i> GPS tersedia';
+                // tampilkan peta
+                const mapSuccess = initMapWithCoordinates(latitude, longitude);
+                if (!mapSuccess) {
+                    mapCard.style.display = 'none';
+                    coordStatusSpan.innerHTML = '<span style="color:red;">Lokasi tidak valid</span>';
+                }
+            } else {
+                // tidak ada koordinat lokasi
+                mapCard.style.display = 'none';
+                if (gpsIndicatorSpan) gpsIndicatorSpan.innerHTML = '<i class="fas fa-map-pin-slash"></i> Tanpa lokasi GPS';
+                if (coordStatusSpan) coordStatusSpan.innerHTML = 'Tidak tersedia';
+            }
+            
+            // Buat Tabel EXIF dan tampilkan semua tag menarik
+            const exifHtml = renderExifTable(exifOutput);
+            exifInfoDiv.innerHTML = exifHtml;
+            
+            // sedikit extra: jika ada lokasi latitude/longitude namun map gagal muncul? tetap backup
+            if ((latitude && longitude) && mapCard.style.display === 'none') {
+                // coba lagi dengan delay sedikit (bug handling)
+                setTimeout(() => {
+                    if (latitude && longitude && leafletMap === null) {
+                        mapCard.style.display = 'block';
+                        initMapWithCoordinates(latitude, longitude);
+                    }
+                }, 100);
+            }
+            
+        } catch (err) {
+            console.error("EXIF Parse Error", err);
+            exifInfoDiv.innerHTML = `<div class="empty-metadata" style="color:#b91c1c;"><i class="fas fa-bug"></i> Gagal membaca metadata: ${err.message}<br>Pastikan file gambar tidak rusak.</div>`;
+            mapCard.style.display = 'none';
+            if (gpsIndicatorSpan) gpsIndicatorSpan.innerHTML = '';
+        } finally {
+            loadingDiv.style.display = 'none';
+            currentFileProcessed = true;
+        }
+    }
+    
+    // --- event listener upload file
+    uploadInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (!file) {
+            // jika user batal pilih file, reset area upload
+            if (!contentGrid.style.display || contentGrid.style.display === 'none') {
+                uploadArea.style.display = 'block';
+            }
+            return;
+        }
+        // validasi tipe gambar
+        if (!file.type.startsWith('image/')) {
+            alert('Harap pilih file gambar (JPEG, PNG, WebP, HEIC)');
+            uploadArea.style.display = 'block';
+            uploadInput.value = '';
+            return;
+        }
+        processFile(file);
+    });
+    
+    // --- drag & drop lebih halus
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = '#7c3aed';
+        uploadArea.style.backgroundColor = '#faf5ff';
+    });
+    uploadArea.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = '#cbd5e1';
+        uploadArea.style.backgroundColor = '#fefce8';
+    });
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = '#cbd5e1';
+        uploadArea.style.backgroundColor = '#fefce8';
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            const file = files[0];
+            if (file.type.startsWith('image/')) {
+                uploadInput.files = files;
+                // trigger change event manual
+                const changeEvent = new Event('change', { bubbles: true });
+                uploadInput.dispatchEvent(changeEvent);
+            } else {
+                alert('Hanya file gambar yang didukung.');
+            }
+        }
+    });
+    
+    // --- tombol reset dengan aksi yang sangat jelas
+    btnReset.addEventListener('click', () => {
+        resetApp();
+        // juga sembunyikan map card dan bersihkan data
+        if (leafletMap) {
+            leafletMap.remove();
+            leafletMap = null;
+        }
+        // reset input extra
+        uploadInput.value = '';
+        // pastikan upload area tampil (jika grid disembunyikan)
+        uploadArea.style.display = 'block';
+        contentGrid.style.display = 'none';
+        mapCard.style.display = 'none';
+        previewImg.src = '';
+        exifInfoDiv.innerHTML = '<div class="empty-metadata">? Unggah foto untuk menampilkan metadata EXIF dan GPS.</div>';
+        gpsIndicatorSpan.innerHTML = '';
+        coordStatusSpan.innerHTML = '';
+        loadingDiv.style.display = 'none';
+    });
+    
+    // initial state reset if needed ( gaya fresh)
+    resetApp();
+</script>
+</body>
+</html>

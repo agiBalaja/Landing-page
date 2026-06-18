@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Presensi 2026 - Fixed Layout</title>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DV25BYV3TL"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-DV25BYV3TL');
+</script>
+    <style>
+        /* FIX: Memastikan padding tidak menambah lebar elemen */
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --primary: #007bff;
+            --success: #28a745;
+            --bg: #f4f7f6;
+            --dark: #2c3e50;
+        }
+
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            margin: 0; 
+            padding: 15px;
+            background-color: var(--bg);
+            display: flex;
+            justify-content: center;
+        }
+
+        .container { 
+            width: 100%;
+            max-width: 1100px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 20px;
+        }
+
+        h2 { grid-column: 1 / -1; text-align: center; color: var(--dark); margin: 10px 0; }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+            height: fit-content;
+            width: 100%; /* Memastikan card tidak melebihi container */
+        }
+
+        .card-header {
+            background: white;
+            padding: 15px 20px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #f0f0f0;
+            cursor: pointer;
+        }
+
+        .arrow {
+            display: none;
+            border: solid #666;
+            border-width: 0 2px 2px 0;
+            padding: 3px;
+            transform: rotate(45deg);
+            transition: 0.3s;
+        }
+
+        .arrow.up { transform: rotate(-135deg); }
+
+        .card-content {
+            padding: 20px;
+            width: 100%;
+        }
+
+        /* FIX: Input tidak akan terpotong lagi */
+        .input-group { 
+            margin-bottom: 15px; 
+            width: 100%;
+        }
+        
+        label { display: block; margin-bottom: 8px; font-size: 0.9rem; color: #666; }
+        
+        input { 
+            width: 100%; 
+            padding: 12px; 
+            border: 2px solid #ddd; 
+            border-radius: 8px; 
+            font-size: 1.2rem; 
+            text-align: center;
+            background: #fafafa;
+            display: block; /* Memastikan input sebagai block */
+        }
+        
+        input.active { 
+            border-color: var(--primary); 
+            background: #fff; 
+            box-shadow: 0 0 8px rgba(0,123,255,0.1); 
+            outline: none;
+        }
+
+        /* Numpad Grid */
+        .numpad { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 10px; 
+        }
+        
+        .numpad button { 
+            width: 100%;
+            padding: 15px 5px; 
+            font-size: 1.2rem; 
+            font-weight: bold; 
+            border: 1px solid #eee; 
+            border-radius: 8px; 
+            background: #fff; 
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .numpad button:active { background: #f0f0f0; }
+
+        .btn-calc { 
+            grid-column: span 3; 
+            background: var(--success) !important; 
+            color: white; 
+            border: none !important; 
+            margin-top: 5px; 
+            padding: 18px !important;
+        }
+
+        .history-list { max-height: 300px; overflow-y: auto; }
+        
+        .history-item {
+            background: #f8f9fa; padding: 10px; margin-bottom: 8px;
+            border-radius: 6px; border-left: 4px solid var(--success); font-size: 0.85rem;
+        }
+
+        /* RESPONSIVE LAYOUT */
+        @media (max-width: 900px) {
+            .container { grid-template-columns: 1fr; gap: 12px; }
+            .arrow { display: block; }
+            .card-content.collapsed { display: none; }
+            h2 { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Data Kehadiran 2026</h2>
+
+    <!-- KOLOM 1 -->
+    <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+            <span>1. Masukkan Angka</span>
+            <div class="arrow up"></div>
+        </div>
+        <div class="card-content" id="content-input">
+            <div class="input-group">
+                <label>Total Hari Efektif</label>
+                <input type="number" id="totalHari" readonly placeholder="Klik di sini" onclick="switchInput('totalHari')">
+            </div>
+            <div class="input-group">
+                <label>Jumlah Hari Hadir</label>
+                <input type="number" id="hadir" readonly placeholder="Klik di sini" onclick="switchInput('hadir')">
+            </div>
+            <div id="quickResult" style="text-align:center; font-weight:bold; color:var(--success); min-height: 20px;"></div>
+            
+        </div>
+    </div>
+
+    <!-- KOLOM 2 -->
+    <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+            <span>2. Tombol Angka</span>
+            <div class="arrow up"></div>
+        </div>
+        <div class="card-content" id="content-numpad">
+            <div class="numpad">
+                
+                <button class="btn-calc" onclick="calculate()">HITUNG PERSENTASE</button>
+                <button onclick="press(7)">7</button><button onclick="press(8)">8</button><button onclick="press(9)">9</button>
+                <button onclick="press(4)">4</button><button onclick="press(5)">5</button><button onclick="press(6)">6</button>
+                <button onclick="press(1)">1</button><button onclick="press(2)">2</button><button onclick="press(3)">3</button>
+                <button onclick="clearAll()" style="color:#dc3545">C</button><button onclick="press(0)">0</button><button onclick="backspace()">←</button>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- KOLOM 3 -->
+    <div class="card">
+        <div class="card-header" onclick="toggleCard(this)">
+            <span>3. Riwayat</span>
+            <div class="arrow"></div>
+        </div>
+        <div class="card-content collapsed" id="content-history" style="display: none;">
+            <div id="historyList" class="history-list">
+                <p style="color:#999; text-align:center; font-size: 0.9rem;">Belum ada data.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentInput = 'totalHari';
+    document.getElementById(currentInput).classList.add('active');
+
+    function toggleCard(header) {
+        const content = header.nextElementSibling;
+        const arrow = header.querySelector('.arrow');
+        
+        if (content.style.display === "none") {
+            content.style.display = "block";
+            arrow.classList.add('up');
+        } else {
+            content.style.display = "none";
+            arrow.classList.remove('up');
+        }
+    }
+
+    function switchInput(id) {
+        document.getElementById('totalHari').classList.remove('active');
+        document.getElementById('hadir').classList.remove('active');
+        currentInput = id;
+        document.getElementById(id).classList.add('active');
+    }
+
+    function press(num) {
+        document.getElementById(currentInput).value += num;
+    }
+
+    function backspace() {
+        const input = document.getElementById(currentInput);
+        input.value = input.value.slice(0, -1);
+    }
+
+    function clearAll() {
+        document.getElementById('totalHari').value = '';
+        document.getElementById('hadir').value = '';
+        document.getElementById('quickResult').innerText = '';
+    }
+
+    function calculate() {
+        const total = parseFloat(document.getElementById('totalHari').value);
+        const hadir = parseFloat(document.getElementById('hadir').value);
+        
+        if (!total || isNaN(hadir)) {
+            alert("Harap masukkan angka!");
+            return;
+        }
+        if (hadir > total) {
+            alert("Jumlah hadir melebihi total hari!");
+            return;
+        }
+
+        const res = ((hadir / total) * 100).toFixed(2);
+        document.getElementById('quickResult').innerText = `Hasil: ${res}%`;
+
+        const list = document.getElementById('historyList');
+        if (list.innerHTML.includes("Belum ada data")) list.innerHTML = '';
+        
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        const now = new Date();
+        const time = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+        
+        item.innerHTML = `
+            <strong>${res}%</strong> <small style="float:right">${time}</small><br>
+            <small>Kehadiran: ${hadir}/${total} hari</small>
+        `;
+        list.prepend(item);
+
+        // Auto open history jika sedang tertutup di mobile
+        const histContent = document.getElementById('content-history');
+        if (histContent.style.display === "none") {
+            toggleCard(histContent.previousElementSibling);
+        }
+    }
+</script>
+
+</body>
+</html>

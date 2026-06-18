@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator PKH Modern</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .input-number::-webkit-inner-spin-button,
+        .input-number::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .result-input {
+            background-color: #f3f4f6;
+            font-weight: bold;
+        }
+        .table-row-hover:hover {
+            background-color: #f8fafc;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen py-8 px-4">
+    <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+        <!-- Header Section -->
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold"><i class="fas fa-calculator mr-2"></i> Kalkulator PKH</h1>
+                    <p class="text-blue-100 mt-1">Program Keluarga Harapan - Kementerian Sosial RI</p>
+                </div>
+                <div class="bg-white/20 p-3 rounded-full">
+                    <i class="fas fa-hands-helping text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="p-6">
+            <div class="mb-6">
+                <h2 class="text-lg font-semibold text-gray-700 mb-3"><i class="fas fa-info-circle text-blue-500 mr-2"></i> Petunjuk Penggunaan</h2>
+                <p class="text-sm text-gray-600 bg-blue-50 p-3 rounded-md">Masukkan jumlah anggota keluarga untuk setiap komponen bantuan, kalkulator akan otomatis menghitung total bantuan yang diterima per tahun dan per bulan.</p>
+            </div>
+            
+            <!-- Calculator Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full rounded-lg overflow-hidden border border-gray-200">
+                    <thead>
+                        <tr class="bg-blue-600 text-white">
+                            <th class="p-3 text-left">Komponen Bantuan</th>
+                            <th class="p-3 text-right">Nominal/Tahun</th>
+                            <th class="p-3">Jumlah</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- SD -->
+                        <tr class="border-b border-gray-200 table-row-hover">
+                            <td class="p-3 flex items-center">
+                                <div class="bg-blue-100 p-2 rounded-md mr-3">
+                                    <i class="fas fa-child text-blue-600"></i>
+                                </div>
+                                <span>Pendidikan SD</span>
+                            </td>
+                            <td class="p-3 text-right font-medium">Rp900.000</td>
+                            <td class="p-3 text-center">
+                                <div class="flex justify-center">
+                                    <input id="qty_sd" type="number" min="0" max="3" 
+                                           class="input-number w-16 py-1 px-2 border border-gray-300 rounded-md text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                           onchange="hitung()">
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <!-- SMP -->
+                        <tr class="border-b border-gray-200 table-row-hover">
+                            <td class="p-3 flex items-center">
+                                <div class="bg-indigo-100 p-2 rounded-md mr-3">
+                                    <i class="fas fa-user-graduate text-indigo-600"></i>
+                                </div>
+                                <span>Pendidikan SMP</span>
+                            </td>
+                            <td class="p-3 text-right font-medium">Rp1.500.000</td>
+                            <td class="p-3 text-center">
+                                <div class="flex justify-center">
+                                    <input id="qty_smp" type="number" min="0" max="3" 
+                                           class="input-number w-16 py-1 px-2 border border-gray-300 rounded-md text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                           onchange="hitung()">
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <!-- SMA -->
+                        <tr class="border-b border-gray-200 table-row-hover">
+                            <td class="p-3 flex items-center">
+                                <div class="bg-purple-100 p-2 rounded-md mr-3">
+                                    <i class="fas fa-graduation-cap text-purple-600"></i>
+                                </div>
+                                <span>Pendidikan SMA</span>
+                            </td>
+                            <td class="p-3 text-right font-medium">Rp2.000.000</td>
+                            <td class="p-3 text-center">
+                                <div class="flex justify-center">
+                                    <input id="qty_sma" type="number" min="0" max="3" 
+                                           class="input-number w-16 py-1 px-2 border border-gray-300 rounded-md text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                           onchange="hitung()">
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <!-- Balita -->
+                        <tr class="border-b border-gray-200 table-row-hover">
+                            <td class="p-3 flex items-center">
+                                <div class="bg-pink-100 p-2 rounded-md mr-3">
+                                    <i class="fas fa-baby text-pink-600"></i>
+                                </div>
+                                <span>Balita</span>
+                            </td>
+                            <td class="p-3 text-right font-medium">Rp3.000.000</td>
+                            <td class="p-3 text-center">
+                                <div class="flex justify-center">
+                                    <input id="qty_apras" type="number" min="0" max="3" 
+                                           class="input-number w-16 py-1 px-2 border border-gray-300 rounded-md text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                           onchange="hitung()">
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <!-- Ibu Hamil -->
+                        <tr class="border-b border-gray-200 table-row-hover">
+                            <td class="p-3 flex items-center">
+                                <div class="bg-red-100 p-2 rounded-md mr-3">
+                                    <i class="fas fa-baby-carriage text-red-600"></i>
+                                </div>
+                                <span>Ibu Hamil</span>
+                            </td>
+                            <td class="p-3 text-right font-medium">Rp3.000.000</td>
+                            <td class="p-3 text-center">
+                                <div class="flex justify-center">
+                                    <input id="qty_hamil" type="number" min="0" max="3" 
+                                           class="input-number w-16 py-1 px-2 border border-gray-300 rounded-md text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                           onchange="hitung()">
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <!-- Lansia -->
+                        <tr class="border-b border-gray-200 table-row-hover">
+                            <td class="p-3 flex items-center">
+                                <div class="bg-amber-100 p-2 rounded-md mr-3">
+                                    <i class="fas fa-blind text-amber-600"></i>
+                                </div>
+                                <span>Lansia</span>
+                            </td>
+                            <td class="p-3 text-right font-medium">Rp2.400.000</td>
+                            <td class="p-3 text-center">
+                                <div class="flex justify-center">
+                                    <input id="qty_lansia" type="number" min="0" max="3" 
+                                           class="input-number w-16 py-1 px-2 border border-gray-300 rounded-md text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                           onchange="hitung()">
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <!-- Disabilitas Berat -->
+                        <tr class="border-b border-gray-200 table-row-hover">
+                            <td class="p-3 flex items-center">
+                                <div class="bg-green-100 p-2 rounded-md mr-3">
+                                    <i class="fas fa-wheelchair text-green-600"></i>
+                                </div>
+                                <span>Disabilitas Berat</span>
+                            </td>
+                            <td class="p-3 text-right font-medium">Rp2.400.000</td>
+                            <td class="p-3 text-center">
+                                <div class="flex justify-center">
+                                    <input id="qty_dsb" type="number" min="0" max="3" 
+                                           class="input-number w-16 py-1 px-2 border border-gray-300 rounded-md text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                           onchange="hitung()">
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Results Section -->
+            <div class="mt-8 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-700 mb-3 flex items-center">
+                    <i class="fas fa-file-invoice-dollar text-blue-500 mr-2"></i> Hasil Perhitungan
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Total Pertahun -->
+                    <div class="bg-white p-4 rounded-lg border border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500">Total Pertahun</p>
+                                <input id="total_harga" type="text" readonly class="result-input w-full mt-1 py-2 px-3 border-none font-bold text-blue-600 text-lg">
+                            </div>
+                            <div class="bg-blue-100 p-3 rounded-full">
+                                <i class="fas fa-calendar-alt text-blue-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Per Tahap -->
+                    <div class="bg-white p-4 rounded-lg border border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500">Per Tahap (3 bulan)</p>
+                                <input id="tahap" type="text" readonly class="result-input w-full mt-1 py-2 px-3 border-none font-bold text-indigo-600 text-lg">
+                            </div>
+                            <div class="bg-indigo-100 p-3 rounded-full">
+                                <i class="fas fa-coins text-indigo-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- PKH + BPNT -->
+                    <div class="bg-white p-4 rounded-lg border border-gray-200 md:col-span-2">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500">PKH + BPNT (3 bulan)</p>
+                                <input id="sembako" type="text" readonly class="result-input w-full mt-1 py-2 px-3 border-none font-bold text-green-600 text-lg">
+                            </div>
+                            <div class="bg-green-100 p-3 rounded-full">
+                                <i class="fas fa-shopping-basket text-green-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Button -->
+            <div class="mt-6 flex justify-center">
+                <button onclick="hitung()" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 px-6 rounded-full shadow-md transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">
+                    <i class="fas fa-calculator mr-2"></i> Hitung Sekarang
+                </button>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="bg-gray-100 px-6 py-3 text-center text-sm text-gray-600 border-t border-gray-200">
+            <p>© 2023 Kalkulator PKH - Direktorat Jaminan Sosial Kementerian Sosial RI</p>
+        </div>
+    </div>
+
+    <script>
+        function hitung() {
+            let harga = {
+                sd: 900000, smp: 1500000, sma: 2000000,
+                apras: 3000000, hamil: 3000000,
+                lansia: 2400000, dsb: 2400000
+            };
+            
+            let total = (harga.sd * (document.getElementById('qty_sd').value || 0)) +
+                        (harga.smp * (document.getElementById('qty_smp').value || 0)) +
+                        (harga.sma * (document.getElementById('qty_sma').value || 0)) +
+                        (harga.apras * (document.getElementById('qty_apras').value || 0)) +
+                        (harga.hamil * (document.getElementById('qty_hamil').value || 0)) +
+                        (harga.lansia * (document.getElementById('qty_lansia').value || 0)) +
+                        (harga.dsb * (document.getElementById('qty_dsb').value || 0));
+            
+            // Format currency with Rp and thousand separators
+            const formatCurrency = (value) => {
+                return 'Rp' + value.toLocaleString('id-ID');
+            };
+            
+            document.getElementById('total_harga').value = formatCurrency(total);
+            document.getElementById('tahap').value = formatCurrency(total / 4);
+            document.getElementById('sembako').value = formatCurrency((total / 4) + 600000);
+        }
+        
+        // Initialize calculation on load
+        document.addEventListener('DOMContentLoaded', function() {
+            hitung();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verkom PKH - Auto Header</title>
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-DV25BYV3TL"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-DV25BYV3TL');
+</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; font-size: 13px; margin: 0; background: #f0f2f5; }
+        .container { background: white; min-height: 100vh; padding: 12px; max-width: 900px; margin: auto; box-sizing: border-box; }
+        .app-header { text-align: center; border-bottom: 2px solid #d32f2f; margin-bottom: 15px; }
+        .app-header h1 { font-size: 16px; color: #d32f2f; margin: 5px 0; }
+
+        .row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .col { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+        label { font-weight: bold; font-size: 11px; color: #555; }
+        input, select { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px; width: 100%; box-sizing: border-box; }
+
+        .btn-pdf { 
+            background: #d32f2f; color: white; padding: 14px; border: none; border-radius: 6px; 
+            font-weight: bold; font-size: 15px; width: 100%; cursor: pointer; margin: 10px 0;
+        }
+
+        .table-scroll { width: 100%; overflow-x: auto; border: 1px solid #ddd; border-radius: 4px; }
+        table { border-collapse: collapse; min-width: 1000px; width: 100%; }
+        th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 9px; }
+        th { background: #f8f9fa; }
+
+        .meta-box { font-size: 12px; background: #e3f2fd; padding: 12px; border-radius: 4px; margin-bottom: 10px; border-left: 4px solid #1976d2; }
+        .meta-grid { display: grid; grid-template-columns: 100px 10px auto; gap: 5px; line-height: 1.6; }
+        .meta-label { font-weight: bold; color: #1976d2; }
+
+        .footer-preview { 
+            margin-top: 20px; padding: 15px; border-top: 1px dashed #ccc; 
+            display: flex; justify-content: space-between; text-align: center;
+        }
+        .sig-box { width: 45%; }
+        .line { height: 40px; border-bottom: 1px solid #000; margin-bottom: 5px; width: 80%; margin: 0 auto; }
+        .name-pnd { font-weight: bold; text-transform: uppercase; margin-top: 10px; display: block; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="app-header"><h1>SISTEM VERKOM PENDIDIKAN</h1></div>
+
+    <div class="row">
+        <div class="col">
+            <label>1. Upload CSV:</label>
+            <input type="file" id="csvFile" accept=".csv">
+        </div>
+        <div class="col">
+            <label>Tempat/Lokasi:</label>
+            <input type="text" id="inputTempat" placeholder="Contoh: Pelepat Lintas" oninput="updatePreview()">
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <label>Nama Pendamping (TTD):</label>
+            <input type="text" id="inputNamaPnd" placeholder="Nama Lengkap..." oninput="updatePreview()">
+        </div>
+        <div class="col">
+            <label>NIP Pendamping (TTD):</label>
+            <input type="text" id="inputNipPnd" placeholder="NIP..." oninput="updatePreview()">
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col" style="flex: 1;">
+            <label>Nama Bulan (Pisahkan Koma):</label>
+            <input type="text" id="inputBulan" value="JANUARI, FEBRUARI, MARET" oninput="updateTableStructure()">
+        </div>
+        <div class="col">
+            <label>Jml Bulan:</label>
+            <select id="jmlBulan" onchange="updateTableStructure()">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3" selected>3</option>
+            </select>
+        </div>
+    </div>
+
+    <button onclick="exportToPDF()" class="btn-pdf">DOWNLOAD PDF</button>
+
+    <div class="meta-box">
+        <div class="meta-grid">
+            <div class="meta-label">NPSN</div> <div>:</div> <div id="npsnVal">-</div>
+            <div class="meta-label">Nama Sekolah</div> <div>:</div> <div id="sekolahVal">-</div>
+        </div>
+    </div>
+
+    <div class="table-scroll">
+        <table id="verkomTable">
+            <thead id="tableHead"></thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+    <div class="footer-preview">
+        <div class="sig-box">
+            Mengetahui,<br>Kepala Sekolah/Fasdik
+            <div class="line"></div>
+             ........................................... <br>
+			 NIP. ........................................
+        </div>
+		
+        <div class="sig-box">
+            <span id="prevTgl">-</span><br>
+            ASN PPPK KEMENSOS RI
+            <div class="line"></div>
+            <span id="prevNama" class="name-pnd">-</span>
+            NIP. <span id="prevNip">-</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    let rawData = [];
+
+    function getFormattedDate() {
+        const d = new Date();
+        const bln = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+        return `${d.getDate()} ${bln[d.getMonth()]} ${d.getFullYear()}`;
+    }
+
+    function updatePreview() {
+        const tpt = document.getElementById('inputTempat').value || "........";
+        document.getElementById('prevTgl').innerText = `${tpt}, ${getFormattedDate()}`;
+        document.getElementById('prevNama').innerText = document.getElementById('inputNamaPnd').value || "....................";
+        document.getElementById('prevNip').innerText = document.getElementById('inputNipPnd').value || "....................";
+    }
+
+    function updateTableStructure() {
+        const jml = parseInt(document.getElementById('jmlBulan').value);
+        const blnArr = document.getElementById('inputBulan').value.split(',').map(s => s.trim());
+        const head = document.getElementById('tableHead');
+        
+        let h1 = `<tr><th rowspan="3" style="width:30px">NO</th><th rowspan="3">NAMA PENGURUS</th><th rowspan="3" style="width:80px">NISN</th><th rowspan="3">NAMA SISWA</th><th rowspan="3" style="width:50px">BENTUK</th><th rowspan="3" style="width:50px">TINGKAT</th>`;
+        for(let i=0; i<jml; i++) h1 += `<th colspan="3">${(blnArr[i] || "BULAN").toUpperCase()}</th>`;
+        h1 += `<th rowspan="3">Jumlah Kehadiran %</th><th rowspan="3">Komitmen/ Tidak</th><th rowspan="3">KET</th><th rowspan="3">NAMA PENDAMPING</th></tr>`;
+
+        let h2 = `<tr>`;
+        for(let i=0; i<jml; i++) h2 += `<th colspan="3">Absensi</th>`;
+        h2 += `</tr><tr>`;
+        for(let i=0; i<jml; i++) h2 += `<th>Alpa</th><th>Izin</th><th>Sakit</th>`;
+        h2 += `</tr>`;
+        
+        head.innerHTML = h1 + h2;
+        if(rawData.length > 0) renderTable(rawData);
+    }
+
+    document.getElementById('csvFile').addEventListener('change', function(e) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const wb = XLSX.read(data, {type: 'array'});
+            const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: 1});
+            
+            // Ekstraksi NPSN dan Nama Sekolah
+            // Berdasarkan gambar, NPSN biasanya di baris 2 (indeks 1) dan Nama Sekolah baris 3 (indeks 2)
+            if (rows[1] && rows[1][1]) {
+                document.getElementById('npsnVal').innerText = String(rows[1][1]).replace(':', '').trim();
+            }
+            if (rows[2] && rows[2][1]) {
+                document.getElementById('sekolahVal').innerText = String(rows[2][1]).replace(':', '').trim();
+            }
+
+            rawData = rows.filter(r => !isNaN(r[0]) && r[0] !== "" && r[0] !== null);
+            renderTable(rawData);
+        };
+        reader.readAsArrayBuffer(e.target.files[0]);
+    });
+
+    function renderTable(rows) {
+        const body = document.getElementById('tableBody');
+        const jmlBulan = parseInt(document.getElementById('jmlBulan').value);
+        body.innerHTML = "";
+        
+        rows.forEach(row => {
+            const tr = document.createElement('tr');
+            [0, 2, 4, 5, 6, 7].forEach(i => {
+                const td = document.createElement('td');
+                td.textContent = row[i] || "";
+                tr.appendChild(td);
+            });
+
+            for(let i=0; i<(jmlBulan*3); i++) tr.appendChild(document.createElement('td'));
+
+			const tdKehadiran = document.createElement('td'); 
+            tdKehadiran.textContent = row[18] || ""; 
+            tr.appendChild(tdKehadiran);
+			
+			const tdKOMITMEN = document.createElement('td'); 
+            tdKOMITMEN.textContent = row[18] || ""; 
+            tr.appendChild(tdKOMITMEN);
+			
+            const tdKet = document.createElement('td'); 
+            tdKet.textContent = row[18] || ""; 
+            tr.appendChild(tdKet);
+
+            const tdPnd = document.createElement('td'); 
+            tdPnd.textContent = (row[row.length-1] || "").replace(/['"]/g, ''); 
+            tr.appendChild(tdPnd);
+            
+            body.appendChild(tr);
+        });
+    }
+
+    function exportToPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'mm', 'a4');
+        const tgl = getFormattedDate();
+        const tempat = document.getElementById('inputTempat').value || "........";
+        const namaPnd = document.getElementById('inputNamaPnd').value || "....................";
+        const nipPnd = document.getElementById('inputNipPnd').value || "....................";
+        const npsn = document.getElementById('npsnVal').innerText;
+        const sekolah = document.getElementById('sekolahVal').innerText;
+
+        doc.setFontSize(11).setFont(undefined, 'bold').text("FORM VERIFIKASI KOMITMEN PENDIDIKAN", 148, 12, { align: "center" });
+        
+        // Header Info di PDF
+        doc.setFontSize(9).setFont(undefined, 'normal');
+        doc.text(`NPSN : ${npsn}`, 14, 20);
+        doc.text(`Nama Sekolah : ${sekolah}`, 14, 24);
+
+        doc.autoTable({
+            html: '#verkomTable',
+            startY: 28,
+            theme: 'grid',
+            headStyles: { 
+                fillColor: [220, 220, 220], textColor: [0, 0, 0], 
+                lineColor: [0, 0, 0], lineWidth: 0.1, 
+                halign: 'center', valign: 'middle' 
+            },
+            styles: { 
+                fontSize: 6, cellPadding: 1, 
+                lineColor: [0, 0, 0], lineWidth: 0.1, 
+                halign: 'center', valign: 'middle' 
+            },
+            margin: { bottom: 50 }
+        });
+
+        const totalPages = doc.internal.getNumberOfPages();
+        doc.setPage(totalPages);
+        let finalY = doc.lastAutoTable.finalY + 10;
+        if (finalY > 165) { doc.addPage(); finalY = 20; }
+
+        doc.setFontSize(9);
+        doc.text("Mengetahui,", 40, finalY + 5);
+        doc.text("Pihak Sekolah/Fasdik", 40, finalY + 10);
+        doc.text(" ..................................................... ", 40, finalY + 30);
+        doc.text("NIP. .....................................................", 40, finalY + 35);
+
+        doc.text(`${tempat}, ${tgl}`, 210, finalY + 5);
+        doc.text("ASN PPPK KEMENSOS RI", 210, finalY + 10);
+        doc.setFont(undefined, 'bold').text(namaPnd.toUpperCase(), 210, finalY + 30);
+        doc.setFont(undefined, 'normal').text(`NIP. ${nipPnd}`, 210, finalY + 35);
+
+        doc.save(`Verkom_${sekolah}.pdf`);
+    }
+
+    updateTableStructure();
+    updatePreview();
+</script>
+
+</body>
+</html>

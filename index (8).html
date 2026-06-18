@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Konversi Data ke Tabel (Fix NIP/KK)</title>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DV25BYV3TL"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DV25BYV3TL');
+  </script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f9ff;
+      color: #333;
+      padding: 15px;
+      margin: 0;
+    }
+    h2 { text-align: center; color: #2c3e50; }
+    label { font-weight: bold; display: block; margin-top: 15px; margin-bottom: 5px; }
+    textarea { width: 100%; max-width: 800px; box-sizing: border-box; padding: 12px; border: 1px solid #ccc; border-radius: 8px; resize: vertical; font-size: 14px; background-color: #ffffff; }
+    input[type="number"] { width: 100%; max-width: 200px; box-sizing: border-box; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; }
+    .button-group { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+    .btn { flex: 1; min-width: 120px; background-color: #4CAF50; color: white; border: none; border-radius: 8px; padding: 12px 15px; cursor: pointer; text-align: center; }
+    .btn:hover { background-color: #45a049; }
+    .table-wrapper { margin-top: 25px; max-height: 500px; overflow: auto; border: 1px solid #b0c4de; border-radius: 8px; background-color: #ffffff; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 600px; }
+    th, td { border: 1px solid #dfe6e9; padding: 10px; text-align: left; white-space: nowrap; }
+    th { background-color: #e0f7fa; position: sticky; top: 0; z-index: 1; }
+    tr:nth-child(even) { background-color: #f9f9f9; }
+    .row-num { text-align: center; background-color: #f1f1f1 !important; font-weight: bold; width: 40px; }
+  </style>
+</head>
+<body>
+
+<h2>Konversi Data ke Tabel (Auto-Format Teks)</h2>
+
+<label for="inputData">Data (Setiap baris = 1 kolom data):</label>
+<textarea id="inputData" rows="8" placeholder="Masukkan data di sini...">SLAMET
+198501012010011002
+3201234567890001
+Sungai Gurun
+PELEPAT LINTAS
+4
+1</textarea>
+
+<label for="columnCount">Jumlah Kolom per Record:</label>
+<input type="number" id="columnCount" value="7">
+
+<div class="button-group">
+  <button class="btn" onclick="convertToTable()">Konversi ke Tabel</button>
+  <button class="btn" onclick="resetAll()">Reset</button>
+  <button class="btn" onclick="copyTable()">Copy Tabel</button>
+</div>
+
+<div class="table-wrapper">
+  <div id="tableResult"></div>
+</div>
+
+<script>
+function convertToTable() {
+  const input = document.getElementById("inputData").value.trim();
+  const lines = input.split(/\n|\t/).map(line => line.trim()); 
+
+  const columnCount = parseInt(document.getElementById("columnCount").value);
+  if (isNaN(columnCount) || columnCount <= 0) {
+    alert("Masukkan jumlah kolom yang valid!");
+    return;
+  }
+
+  const tableData = [];
+  for (let i = 0; i < lines.length; i += columnCount) {
+    const chunk = lines.slice(i, i + columnCount);
+    if (chunk.length > 0) {
+      const row = [...chunk];
+      while (row.length < columnCount) row.push("");
+      
+      // MODIFIKASI: Deteksi angka panjang (NIP/KK) dan tambahkan kutip satu
+      const formattedRow = row.map(cell => {
+        // Jika cell hanya berisi angka dan panjangnya > 12 karakter
+        if (/^\d+$/.test(cell) && cell.length > 12) {
+          return "'" + cell; 
+        }
+        return cell;
+      });
+      
+      tableData.push(formattedRow);
+    }
+  }
+
+  let html = "<table id='dataTable'><thead><tr><th class='row-num'>No</th>";
+  for (let i = 1; i <= columnCount; i++) html += `<th>Kolom ${i}</th>`;
+  html += "</tr></thead><tbody>";
+
+  tableData.forEach((row, index) => {
+    html += "<tr>";
+    html += `<td class='row-num'>${index + 1}</td>`;
+    row.forEach(cell => html += `<td>${cell}</td>`);
+    html += "</tr>";
+  });
+
+  html += "</tbody></table>";
+  document.getElementById("tableResult").innerHTML = html;
+}
+
+function resetAll() {
+  document.getElementById("inputData").value = "";
+  document.getElementById("tableResult").innerHTML = "";
+}
+
+function copyTable() {
+  const table = document.getElementById("dataTable");
+  if (!table) return;
+
+  let text = "";
+  const rows = table.querySelectorAll("tr");
+  rows.forEach(row => {
+    const cells = row.querySelectorAll("th, td");
+    // Copy mulai dari index 1 (melewatkan kolom nomor)
+    const rowText = Array.from(cells).slice(1).map(cell => cell.innerText).join("\t");
+    text += rowText + "\n";
+  });
+
+  navigator.clipboard.writeText(text).then(() => {
+    alert("Berhasil disalin! Data NIP/KK kini aman untuk Excel.");
+  });
+}
+</script>
+
+</body>
+</html>

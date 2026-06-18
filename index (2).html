@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Verifikasi Kesos 2026</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            font-family: Arial, sans-serif; 
+            font-size: 10pt; 
+            background-color: #f4f6f9;
+            padding: 20px;
+            margin: 0;
+        }
+        .controls { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            margin-bottom: 20px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .controls h3 { margin-top: 0; color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        
+        /* Grid Layout untuk Form Input (Desktop: 2 Kolom) */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+            margin-top: 15px;
+        }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-size: 9pt; font-weight: bold; margin-bottom: 5px; color: #444; }
+        .form-group input, .form-group select {
+            padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 9pt;
+            width: 100%;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none; border-color: #0056b3;
+        }
+
+        .controls button {
+            background: #0056b3; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; width: 100%;
+        }
+        .controls button:hover { background: #004494; }
+        
+        /* Kontainer Responsif untuk Area Pratinjau Dokumen */
+        .preview-container {
+            width: 100%;
+            overflow-x: auto; /* Memungkinkan scroll horizontal di HP agar tabel tidak hancur */
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: white;
+        }
+
+        /* Printable Area Styles */
+        .printable-area { 
+            background: white; 
+            padding: 30px; 
+            width: 100%; 
+            min-width: 1024px; /* Mengunci lebar desktop agar hasil PDF di HP tidak gepeng/acak-acakan */
+            box-sizing: border-box;
+        }
+        .header-title { 
+            text-align: center; 
+            font-size: 14pt; 
+            font-weight: bold; 
+            margin-bottom: 20px; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-bottom: 20px; 
+            text-align: center;
+        }
+        th, td { 
+            border: 1px solid black; 
+            padding: 6px; 
+            vertical-align: top; 
+            word-wrap: break-word;
+        }
+        th { font-weight: bold; background-color: #f9f9f9; font-size: 9pt; }
+        td { font-size: 9pt; }
+        
+        select.tabel-dropdown { 
+            width: 100%; 
+            padding: 4px; 
+            font-size: 8pt; 
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        
+        .signatures { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-top: 40px; 
+            padding: 0 20px;
+        }
+        .sign-box { text-align: left; width: 35%; font-size: 10pt; }
+        .sign-box p { margin: 4px 0; }
+        .sign-space { height: 80px; }
+        
+        /* Utility */
+        .text-left { text-align: left; }
+
+        /* --- RESPONSIVE MEDIA QUERIES (UNTUK HP & TABLET) --- */
+        @media screen and (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .controls {
+                padding: 15px;
+            }
+            /* Ubah input form dari 2 kolom menjadi 1 kolom vertikal di HP */
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            .controls button {
+                padding: 14px 20px;
+                font-size: 10pt;
+            }
+            /* Memberikan space informasi pengingat di layar HP */
+            .preview-container::before {
+                content: "💡 Geser kanan-kiri untuk melihat pratinjau tabel penuh";
+                display: block;
+                padding: 8px 12px;
+                background: #e1f5fe;
+                color: #0288d1;
+                font-size: 8pt;
+                font-weight: bold;
+                border-bottom: 1px solid #b3e5fc;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls no-print" id="controls">
+        <h3>Menu Generasi Form Verifikasi Kesos</h3>
+        
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Nama ASN / Petugas:</label>
+                <input type="text" id="inputAsnName" placeholder="Contoh: Muhammad haza, S.S" oninput="updateForm()">
+            </div>
+            <div class="form-group">
+                <label>NIP:</label>
+                <input type="text" id="inputNip" placeholder="Contoh: 19800101 200501 1 001" oninput="updateForm()">
+            </div>
+            <div class="form-group">
+                <label>Tempat Surat Dibuat:</label>
+                <input type="text" id="inputTempat" placeholder="Contoh: PELEPAT" value="PELEPAT" oninput="updateForm()">
+            </div>
+            <div class="form-group">
+                <label>Tanggal Dokumen:</label>
+                <input type="text" id="inputTanggal" placeholder="Contoh: 10 Juni 2026" oninput="updateForm()">
+            </div>
+            <div class="form-group">
+                <label>Nama Pengurus / KPM:</label>
+                <input type="text" id="inputPengurus" placeholder="Masukkan Nama Pengurus" oninput="updateForm()">
+            </div>
+            <div class="form-group">
+                <label>Triwulan Periode Verifikasi:</label>
+                <select id="inputTriwulan" onchange="updateTriwulan()">
+                    <option value="1">Triwulan I (Januari - Maret)</option>
+                    <option value="2" selected>Triwulan II (April - Juni)</option>
+                    <option value="3">Triwulan III (Juli - September)</option>
+                    <option value="4">Triwulan IV (Oktober - Desember)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group" style="border-top: 1px solid #eee; padding-top: 15px;">
+            <label>Unggah Data KPM (Excel/CSV - Kolom NAMA & NIK):</label>
+            <input type="file" id="fileUpload" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
+        </div>
+        
+        <button onclick="generatePDF()">Cetak / Download PDF</button>
+    </div>
+
+    <div class="preview-container">
+        <div class="printable-area" id="printableArea">
+            <div class="header-title">
+                FORM VERIFIKASI KESOS 2026<br>
+                <span id="displayTriwulanTitle" style="font-size: 11pt;">TRIWULAN II</span>
+            </div>
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th rowspan="2" style="width:3%;">NO</th>
+                        <th rowspan="2" style="width:14%;">NAMA LANSIA/DISSABILITAS</th>
+                        <th rowspan="2" style="width:13%;">NIK</th>
+                        <th rowspan="2" style="width:4%;">UMUR</th>
+                        <th style="width:18%;" id="headerBulan1">APRIL</th>
+                        <th style="width:18%;" id="headerBulan2">MEI</th>
+                        <th style="width:18%;" id="headerBulan3">JUNI</th>
+                        <th rowspan="2" style="width:6%;">DOKUMENTASI</th>
+                        <th rowspan="2" style="width:6%;">NAMA PETUGAS</th>
+                    </tr>
+                    <tr>
+                        <th>KEGIATAN PENDAMPINGAN PENGURUS</th>
+                        <th>KEGIATAN PENDAMPINGAN PENGURUS</th>
+                        <th>KEGIATAN PENDAMPINGAN PENGURUS</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+            </table>
+
+            <div class="signatures">
+                <div class="sign-box">
+                    <br><br>
+                    <p><b>ASN PPPK KEMENSOS</b></p>
+                    <div class="sign-space"></div>
+                    <p><b id="displayAsnName">........................................</b></p>
+                    <p><b id="displayNip">NIP. ..................................</b></p>
+                </div>
+                <div class="sign-box"></div>
+                <div class="sign-box">
+                <br>
+                    <p><b id="displayTempatTanggal">PELEPAT, ....................</b></p>
+                    <p><b>PENGURUS/KPM</b></p>
+                    <div class="sign-space"></div>
+                    <p><b id="displayPengurus">........................................</b></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Kegiatan
+        const kegiatanOptions = [
+            "",
+            "Memeriksa Tekanan Darah",
+            "mengingatkan minum obat",
+            "membantu mandi",
+            "berpakaian dan makan",
+            "membantu menyiapkan makanan",
+            "mengawasi pola makan",
+            "mengingatkan waktu makan",
+            "mendampingi senam ringan atau peregangan",
+            "latihan gerak",
+            "membantu berjalan didalam rumah",
+            "pendampingan penggunaan alat bantu",
+            "membersihkan area tempat tidur dan kamar",
+            "menjaga rumah tetap aman dan nyaman",
+            "menata barang agar mudah dijangkau"
+        ];
+
+        function createDropdown() {
+            let select = document.createElement('select');
+            select.className = 'tabel-dropdown';
+            kegiatanOptions.forEach(opt => {
+                let option = document.createElement('option');
+                option.value = opt;
+                option.text = opt;
+                select.appendChild(option);
+            });
+            return select.outerHTML;
+        }
+
+        // Kalkulasi Umur
+        function calculateAge(nik) {
+            if (!nik || nik.toString().length < 16) return "";
+            let nikStr = nik.toString().trim();
+            let yy = parseInt(nikStr.substring(10, 12));
+            let birthYear = yy > 26 ? 1900 + yy : 2000 + yy;
+            let currentYear = 2026; 
+            return currentYear - birthYear;
+        }
+
+        // --- UPDATE FUNGSI FORM (REALTIME) ---
+        function updateForm() {
+            const asnName = document.getElementById('inputAsnName').value;
+            const nip = document.getElementById('inputNip').value;
+            const tempat = document.getElementById('inputTempat').value;
+            const tanggal = document.getElementById('inputTanggal').value;
+            const pengurus = document.getElementById('inputPengurus').value;
+
+            document.getElementById('displayAsnName').innerText = asnName ? asnName.toUpperCase() : "........................................";
+            document.getElementById('displayNip').innerText = nip ? "NIP. " + nip : "NIP. ..................................";
+            
+            const txtTempat = tempat ? tempat.toUpperCase() : "........";
+            const txtTanggal = tanggal ? tanggal : "....................";
+            document.getElementById('displayTempatTanggal').innerText = txtTempat + ", " + txtTanggal;
+            
+            document.getElementById('displayPengurus').innerText = pengurus ? pengurus.toUpperCase() : "........................................";
+
+            // Auto-update NAMA PETUGAS di tabel
+            const petugasCells = document.querySelectorAll('.petugas-cell');
+            petugasCells.forEach(cell => {
+                cell.innerText = asnName ? asnName.toUpperCase() : "";
+            });
+        }
+
+        // Update Kolom Triwulan
+        function updateTriwulan() {
+            const tw = document.getElementById('inputTriwulan').value;
+            const b1 = document.getElementById('headerBulan1');
+            const b2 = document.getElementById('headerBulan2');
+            const b3 = document.getElementById('headerBulan3');
+            const twTitle = document.getElementById('displayTriwulanTitle');
+            
+            if(tw === "1") { b1.innerText="JANUARI"; b2.innerText="FEBRUARI"; b3.innerText="MARET"; twTitle.innerText="TRIWULAN I"; }
+            else if(tw === "2") { b1.innerText="APRIL"; b2.innerText="MEI"; b3.innerText="JUNI"; twTitle.innerText="TRIWULAN II"; }
+            else if(tw === "3") { b1.innerText="JULI"; b2.innerText="AGUSTUS"; b3.innerText="SEPTEMBER"; twTitle.innerText="TRIWULAN III"; }
+            else if(tw === "4") { b1.innerText="OKTOBER"; b2.innerText="NOVEMBER"; b3.innerText="DESEMBER"; twTitle.innerText="TRIWULAN IV"; }
+        }
+
+        // Menambah Baris
+        function addRow(index, nama = "", nik = "") {
+            let age = calculateAge(nik);
+            let petugasName = document.getElementById('inputAsnName').value.toUpperCase();
+            
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${index}</td>
+                <td class="text-left">${nama}</td>
+                <td>${nik}</td>
+                <td>${age}</td>
+                <td>${createDropdown()}</td>
+                <td>${createDropdown()}</td>
+                <td>${createDropdown()}</td>
+                <td></td>
+                <td class="petugas-cell">${petugasName}</td>
+            `;
+            return tr;
+        }
+
+        const tbody = document.getElementById('tableBody');
+        function initEmptyRows() {
+            tbody.innerHTML = "";
+            for(let i = 1; i <= 6; i++) {
+                tbody.appendChild(addRow(i));
+            }
+        }
+        initEmptyRows();
+
+        // Handle Excel/CSV
+        document.getElementById('fileUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const data = new Uint8Array(event.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+                processData(jsonData);
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        function processData(data) {
+            if(data.length <= 1) return; 
+            tbody.innerHTML = ""; 
+            
+            let header = data[0].map(h => h ? h.toString().toUpperCase().trim() : "");
+            let idxNama = header.indexOf("NAMA");
+            let idxNik = header.indexOf("NIK");
+            
+            if (idxNama === -1) idxNama = 0; 
+            if (idxNik === -1) idxNik = 1;
+
+            let index = 1;
+            for (let i = 1; i < data.length; i++) {
+                let row = data[i];
+                if (!row || row.length === 0) continue;
+                
+                let nama = row[idxNama] ? row[idxNama] : "";
+                let nik = row[idxNik] ? row[idxNik] : "";
+                
+                if(nama || nik) {
+                    tbody.appendChild(addRow(index++, nama, nik));
+                }
+            }
+        }
+
+        // Export PDF
+        function generatePDF() {
+            const selects = document.querySelectorAll('#printableArea select');
+            const originalSelects = [];
+
+            selects.forEach(select => {
+                const span = document.createElement('span');
+                span.textContent = select.value;
+                span.style.fontSize = '8pt';
+                span.style.textAlign = 'left';
+                span.style.display = 'block';
+                originalSelects.push({ parent: select.parentNode, el: select });
+                select.parentNode.replaceChild(span, select);
+            });
+
+            const element = document.getElementById('printableArea');
+            const opt = {
+                margin:       [10, 5, 10, 5],
+                filename:     'Form_Verifikasi_Kesos_2026.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                // Restore elements
+                for(let i=0; i<originalSelects.length; i++){
+                    let replacedNode = originalSelects[i].parent.querySelector('span');
+                    if(replacedNode) {
+                        originalSelects[i].parent.replaceChild(originalSelects[i].el, replacedNode);
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

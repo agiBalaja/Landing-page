@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator Daftar Hadir P2K2 - Auto Day</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+	    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DV25BYV3TL"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-DV25BYV3TL');
+</script>
+    
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; padding: 20px; }
+        .container { max-width: 800px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: auto; }
+        h2 { color: #d32f2f; text-align: center; margin-bottom: 25px; border-bottom: 2px solid #d32f2f; padding-bottom: 10px; }
+        
+        .row { display: flex; gap: 20px; margin-bottom: 15px; }
+        .col { flex: 1; display: flex; flex-direction: column; }
+        
+        label { font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333; }
+        input { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; width: 100%; box-sizing: border-box; }
+        
+        .btn-generate { 
+            width: 100%; background: #d32f2f; color: white; padding: 15px; border: none; 
+            border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; 
+            margin-top: 20px; transition: 0.3s;
+        }
+        .btn-generate:hover { background: #b71c1c; }
+        
+        /* Highlight untuk input otomatis */
+        .auto-input { background-color: #f8f9fa; color: #666; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>SISTEM DAFTAR HADIR P2K2</h2>
+    
+    <div class="row">
+        <div class="col">
+            <label>Nama Pendamping:</label>
+            <input type="text" id="namaPendamping" placeholder="Masukkan Nama Lengkap">
+        </div>
+        <div class="col">
+            <label>NIP Pendamping:</label>
+            <input type="text" id="nipPendamping" placeholder="Masukkan NIP">
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <label>Nama Kelompok:</label>
+            <input type="text" id="namaKelompok" placeholder="Contoh: Meral Sejahtera">
+        </div>
+        <div class="col">
+            <label>Jumlah Baris (KPM):</label>
+            <input type="number" id="jmlBaris" value="18">
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <label>Tempat Pertemuan:</label>
+            <input type="text" id="tempat" placeholder="Contoh: Balai Desa">
+        </div>
+        <div class="col">
+            <label>Pilih Tanggal:</label>
+            <input type="date" id="tanggal" onchange="updateHariOtomatis()">
+        </div>
+        <div class="col">
+            <label>Hari (Otomatis):</label>
+            <input type="text" id="hariOtomatis" class="auto-input" readonly placeholder="-">
+        </div>
+    </div>
+
+    <button onclick="generatePDF()" class="btn-generate">GENERATE DAFTAR HADIR</button>
+</div>
+
+<script>
+    // Fungsi untuk mendapatkan nama hari dalam Bahasa Indonesia
+    function getNamaHari(dateStr) {
+        if(!dateStr) return "";
+        const d = new Date(dateStr);
+        const hari = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+        return hari[d.getDay()];
+    }
+
+    // Update tampilan hari saat tanggal dipilih
+    function updateHariOtomatis() {
+        const tglInput = document.getElementById('tanggal').value;
+        const hariField = document.getElementById('hariOtomatis');
+        hariField.value = getNamaHari(tglInput);
+    }
+
+    function formatTglIndo(dateStr) {
+        if(!dateStr) return "-";
+        const d = new Date(dateStr);
+        const bln = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+        return `${d.getDate()} ${bln[d.getMonth()]} ${d.getFullYear()}`;
+    }
+
+    function generatePDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+
+        const pendamping = document.getElementById('namaPendamping').value || "....................";
+        const nip = document.getElementById('nipPendamping').value || "....................";
+        const kelompok = document.getElementById('namaKelompok').value || "-";
+        const jml = parseInt(document.getElementById('jmlBaris').value) || 18;
+        const tempat = document.getElementById('tempat').value || "-";
+        
+        const tglValue = document.getElementById('tanggal').value;
+        const hari = getNamaHari(tglValue) || "-";
+        const tgl = formatTglIndo(tglValue);
+
+        // Header (Berdasarkan referensi [cite: 1, 2, 3])
+        doc.setFontSize(10).setFont(undefined, 'bold');
+        doc.text("KEMENTERIAN SOSIAL REPUBLIK INDONESIA", 105, 15, { align: "center" });
+        doc.setFontSize(12);
+        doc.text("DAFTAR HADIR PERTEMUAN KELOMPOK P2K2", 105, 21, { align: "center" });
+        doc.setFontSize(10).setFont(undefined, 'normal');
+        doc.text("PROGRAM KELUARGA HARAPAN (PKH)", 105, 26, { align: "center" });
+        doc.line(15, 28, 195, 28);
+
+        // Info Detail dengan Titik Dua Rata
+        doc.setFontSize(10);
+        const startX = 15;
+        const dotX = 45; 
+        
+        doc.text("Nama Kelompok", startX, 38); doc.text(":", dotX, 38); doc.text(kelompok, dotX + 3, 38);
+        doc.text("Hari / Tanggal", startX, 44); doc.text(":", dotX, 44); doc.text(`${hari}, ${tgl}`, dotX + 3, 44);
+        doc.text("Tempat", startX, 50);        doc.text(":", dotX, 50); doc.text(tempat, dotX + 3, 50);
+
+        // Data Tabel [cite: 10]
+        const bodyData = [];
+        for (let i = 1; i <= jml; i++) {
+            if (i % 2 !== 0) {
+                bodyData.push([i, "", `${i}. ...........`, ""]);
+            } else {
+                bodyData.push([i, "", "", `${i}. ...........`]);
+            }
+        }
+
+        doc.autoTable({
+            startY: 55,
+            head: [['NO', 'NAMA KPM', 'TANDA TANGAN', '']],
+            body: bodyData,
+            theme: 'grid',
+            headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], halign: 'center' },
+            columnStyles: {
+                0: { cellWidth: 12, halign: 'center' },
+                1: { cellWidth: 90 },
+                2: { cellWidth: 40 },
+                3: { cellWidth: 40 }
+            },
+            styles: { minCellHeight: 8, valign: 'middle', fontSize: 9 }
+        });
+
+        // Footer Tanda Tangan [cite: 11, 12]
+        let finalY = doc.lastAutoTable.finalY + 15;
+        if (finalY > 250) { doc.addPage(); finalY = 20; }
+
+        doc.text("ASN PPPK KEMENSOS RI", 140, finalY);
+        doc.setFont(undefined, 'bold');
+        doc.text(pendamping.toUpperCase(), 140, finalY + 20);
+        doc.setFont(undefined, 'normal');
+        doc.text(`NIP. ${nip}`, 140, finalY + 25);
+
+        doc.save(`Absen_P2K2_${kelompok}.pdf`);
+    }
+</script>
+
+</body>
+</html>

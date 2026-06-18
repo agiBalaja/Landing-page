@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Scan Dokumen Web</title>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DV25BYV3TL"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-DV25BYV3TL');
+</script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+    <style>
+        body { background: linear-gradient(to bottom, #87CEEB, #4682B4); padding: 20px; }
+        .container { max-width: 900px; background: white; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.1); padding: 25px; }
+        #video-container { position: relative; width: 100%; background: #000; border-radius: 8px; overflow: hidden; margin-bottom: 15px; }
+        #video { width: 100%; display: block; }
+        .cropper-container { max-height: 400px; margin-bottom: 15px; }
+        #image-preview { max-width: 100%; display: block; }
+        .btn-group-action { margin: 10px 0; display: flex; gap: 8px; flex-wrap: wrap; }
+        .result-canvas { width: 100%; border: 2px solid #dee2e6; border-radius: 8px; background: #fff; margin-top: 15px; }
+        .slider-container { display: flex; align-items: center; gap: 15px; margin-top: 15px; }
+        .slider-label { min-width: 100px; }
+        footer { margin-top: 20px; text-align: center; color: #6c757d; }
+        .toast-notif { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 30px; font-size: 14px; z-index: 9999; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
+        .toast-notif.show { opacity: 1; }
+        .error-message { color: #dc3545; font-size: 0.9rem; margin-top: 10px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">📄 Aplikasi Scan Dokumen</h1>
+        <p class="text-muted text-center">Gunakan kamera atau unggah gambar untuk memindai dokumen.</p>
+
+        <div class="btn-group mb-3 w-100" role="group">
+            <button class="btn btn-outline-primary" id="btn-camera-mode">📷 Gunakan Kamera</button>
+            <button class="btn btn-outline-success" id="btn-upload-mode">🖼️ Unggah Gambar</button>
+        </div>
+
+        <div id="camera-section" style="display: none;">
+            <div id="video-container">
+                <video id="video" autoplay playsinline></video>
+            </div>
+            <div class="btn-group-action mb-3">
+                <button class="btn btn-primary flex-grow-1" id="btn-capture" disabled>📸 Ambil Gambar</button>
+                <button class="btn btn-warning" id="btn-switch-camera" title="Ganti Kamera">🔄 Putar Kamera</button>
+            </div>
+            <div id="camera-error-msg" class="error-message"></div>
+        </div>
+
+        <div id="upload-section" style="display: none;">
+            <input type="file" id="file-input" accept="image/*" class="form-control">
+        </div>
+
+        <div class="mt-3" id="crop-container" style="display: none;">
+            <h5>Atur Area Dokumen:</h5>
+            <div class="cropper-container">
+                <img id="image-preview" src="" alt="Preview">
+            </div>
+            <div class="btn-group-action">
+                <button class="btn btn-success" id="btn-scan">🔍 Proses Scan</button>
+                <button class="btn btn-secondary" id="btn-reset-crop">↻ Reset Crop</button>
+            </div>
+        </div>
+
+        <div id="result-section" style="display: none;">
+            <h5>Hasil Scan:</h5>
+            <canvas id="result-canvas" class="result-canvas"></canvas>
+            <div class="slider-container">
+                <span class="slider-label">Threshold: <span id="threshold-value">128</span></span>
+                <input type="range" id="threshold-slider" class="form-range" min="0" max="255" value="128">
+            </div>
+            <div class="btn-group-action">
+                <button class="btn btn-primary" id="btn-download">💾 Unduh PNG</button>
+                <button class="btn btn-success" id="btn-share">📤 Share</button>
+                <button class="btn btn-outline-dark" id="btn-reset">⟲ Scan Baru</button>
+            </div>
+        </div>
+
+        <footer>
+            <small>Aplikasi sederhana scan dokumen - Edit by Gemini</small>
+        </footer>
+    </div>
+
+    <canvas id="hidden-canvas" style="display: none;"></canvas>
+    <div id="toast-notification" class="toast-notif"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <script>
+        (function() {
+            const video = document.getElementById('video');
+            const btnCamera = document.getElementById('btn-camera-mode');
+            const btnUpload = document.getElementById('btn-upload-mode');
+            const cameraSection = document.getElementById('camera-section');
+            const uploadSection = document.getElementById('upload-section');
+            const btnCapture = document.getElementById('btn-capture');
+            const btnSwitch = document.getElementById('btn-switch-camera');
+            const fileInput = document.getElementById('file-input');
+            const cropContainer = document.getElementById('crop-container');
+            const imagePreview = document.getElementById('image-preview');
+            const btnScan = document.getElementById('btn-scan');
+            const btnResetCrop = document.getElementById('btn-reset-crop');
+            const resultSection = document.getElementById('result-section');
+            const resultCanvas = document.getElementById('result-canvas');
+            const thresholdSlider = document.getElementById('threshold-slider');
+            const thresholdValue = document.getElementById('threshold-value');
+            const btnDownload = document.getElementById('btn-download');
+            const btnShare = document.getElementById('btn-share');
+            const btnReset = document.getElementById('btn-reset');
+            const hiddenCanvas = document.getElementById('hidden-canvas');
+            const toast = document.getElementById('toast-notification');
+            const cameraErrorMsg = document.getElementById('camera-error-msg');
+
+            let cropper = null;
+            let stream = null;
+            let currentFacingMode = 'environment'; // Default kamera belakang
+
+            function showToast(msg, duration = 2000) {
+                toast.textContent = msg;
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), duration);
+            }
+
+            function stopCamera() {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    stream = null;
+                }
+                btnCapture.disabled = true;
+                video.srcObject = null;
+            }
+
+            async function initCamera() {
+                stopCamera();
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: currentFacingMode }
+                    });
+                    video.srcObject = stream;
+                    btnCapture.disabled = false;
+                    showToast(`Kamera ${currentFacingMode === 'user' ? 'Depan' : 'Belakang'} aktif`);
+                } catch (err) {
+                    cameraErrorMsg.textContent = "Gagal akses kamera: " + err.message;
+                }
+            }
+
+            // Event Listener Ganti Kamera
+            btnSwitch.addEventListener('click', () => {
+                currentFacingMode = (currentFacingMode === 'environment') ? 'user' : 'environment';
+                initCamera();
+            });
+
+            btnCamera.addEventListener('click', () => {
+                cameraSection.style.display = 'block';
+                uploadSection.style.display = 'none';
+                initCamera();
+            });
+
+            btnUpload.addEventListener('click', () => {
+                stopCamera();
+                cameraSection.style.display = 'none';
+                uploadSection.style.display = 'block';
+            });
+
+            btnCapture.addEventListener('click', () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext('2d').drawImage(video, 0, 0);
+                loadImageToCropper(canvas.toDataURL('image/png'));
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => loadImageToCropper(event.target.result);
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            function loadImageToCropper(src) {
+                if (cropper) cropper.destroy();
+                imagePreview.src = src;
+                cropContainer.style.display = 'block';
+                imagePreview.onload = () => {
+                    cropper = new Cropper(imagePreview, { viewMode: 1, autoCropArea: 0.8 });
+                };
+            }
+
+            btnScan.addEventListener('click', () => {
+                if (!cropper) return;
+                const canvas = cropper.getCroppedCanvas();
+                applyThreshold(canvas);
+                resultSection.style.display = 'block';
+            });
+
+            function applyThreshold(source) {
+                const ctx = hiddenCanvas.getContext('2d');
+                hiddenCanvas.width = source.width;
+                hiddenCanvas.height = source.height;
+                ctx.drawImage(source, 0, 0);
+                
+                const imageData = ctx.getImageData(0, 0, source.width, source.height);
+                const data = imageData.data;
+                const thresh = parseInt(thresholdSlider.value);
+
+                for (let i = 0; i < data.length; i += 4) {
+                    const gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
+                    const v = gray >= thresh ? 255 : 0;
+                    data[i] = data[i+1] = data[i+2] = v;
+                }
+                
+                resultCanvas.width = source.width;
+                resultCanvas.height = source.height;
+                resultCanvas.getContext('2d').putImageData(imageData, 0, 0);
+            }
+
+            thresholdSlider.addEventListener('input', () => {
+                thresholdValue.textContent = thresholdSlider.value;
+                if (cropper) applyThreshold(cropper.getCroppedCanvas());
+            });
+
+            btnDownload.addEventListener('click', () => {
+                const link = document.createElement('a');
+                link.download = 'scan.png';
+                link.href = resultCanvas.toDataURL();
+                link.click();
+            });
+
+            btnReset.addEventListener('click', () => location.reload());
+            // Perbaikan Fungsi SHARE hasil scan
+
+            btnShare.addEventListener('click', async () => {
+    if (resultCanvas.width === 0) {
+        showToast('Belum ada hasil scan untuk dibagikan.');
+        return;
+    }
+
+    // 1. Konversi canvas ke Blob
+    resultCanvas.toBlob(async (blob) => {
+        if (!blob) {
+            showToast('Gagal memproses gambar.');
+            return;
+        }
+
+        try {
+            const file = new File([blob], 'scan-dokumen.png', { type: 'image/png' });
+            const shareData = {
+                title: 'Hasil Scan Dokumen',
+                text: 'Berikut adalah hasil scan dokumen saya.',
+                files: [file]
+            };
+
+            // 2. Cek apakah browser mendukung Web Share API untuk File
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share(shareData);
+                showToast('Berhasil dibagikan!');
+            } else {
+                throw new Error('Browser tidak mendukung fitur share file.');
+            }
+        } catch (err) {
+            console.error('Share Error:', err);
+            
+            // 3. Fallback jika Share API gagal atau dibatalkan pengguna
+            if (err.name === 'AbortError') {
+                showToast('Berbagi dibatalkan.');
+            } else {
+                // Jika tidak dukung share, tawarkan copy link atau download otomatis
+                if (confirm('Fitur share tidak didukung di browser ini atau koneksi tidak aman (non-HTTPS).\n\nIngin mengunduh gambar saja?')) {
+                    btnDownload.click();
+                }
+            }
+        }
+    }, 'image/png');
+});
+
+
+        })();
+    </script>
+</body>
+</html>

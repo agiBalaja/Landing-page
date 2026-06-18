@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Konversi Absensi Excel - Preview & Download</title>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DV25BYV3TL"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-DV25BYV3TL');
+</script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 30px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .instructions {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        .instructions ul {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin: 5px 0;
+        }
+        .upload-area {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        input, button {
+            margin: 10px;
+            padding: 10px 15px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #status {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .error {
+            color: #dc3545;
+        }
+        .success {
+            color: #28a745;
+        }
+        .preview-container {
+            margin-top: 30px;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .download-btn {
+            display: block;
+            margin: 20px auto;
+            text-align: center;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <h1>Konversi Absensi Excel ke Format Template</h1>
+    
+    <div class="instructions">
+        <h3>📌 Petunjuk Penggunaan</h3>
+        <ul>
+            <li><strong>Format File Input:</strong> File Excel (.xls atau .xlsx) dengan struktur seperti contoh di bawah.</li>
+            
+        </ul>
+        <p style="margin:5px 0 0; font-size:13px; color:#555;">⚠️ file yang di upload adalah hasil download dari <a href=https://intranet.kemensos.go.id/>download disini</a>, yang kemudian dibuka dan simpan ulang ke format .xls atau .xlsx agar mudah di baca sistem</p>
+    </div>
+
+    <div class="upload-area">
+        <input type="file" id="fileInput" accept=".xls, .xlsx" />
+        <button id="convertBtn">Proses & Tampilkan Preview</button>
+    </div>
+    <div id="status"></div>
+
+    <div id="previewSection" class="hidden">
+        <h3>Preview Hasil Konversi</h3>
+        <div class="preview-container">
+            <table id="previewTable">
+                <thead>
+                    <tr>
+                        <th>NIP</th>
+                        <th>TANGGAL</th>
+                        <th>KATEGORI</th>
+                        <th>JENIS</th>
+                        <th>WAKTU</th>
+                        <th>KETERANGAN</th>
+                    </tr>
+                </thead>
+                <tbody id="previewBody"></tbody>
+            </table>
+        </div>
+        <div class="download-btn">
+            <button id="downloadBtn">Download Excel</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentWorkbook = null;
+
+    function escapeHtml(str) {
+        if (str === undefined || str === null) return '';
+        return String(str).replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    document.getElementById('convertBtn').addEventListener('click', function() {
+        const fileInput = document.getElementById('fileInput');
+        const statusDiv = document.getElementById('status');
+        const previewSection = document.getElementById('previewSection');
+        
+        statusDiv.innerHTML = '';
+        previewSection.classList.add('hidden');
+
+        if (!fileInput.files.length) {
+            statusDiv.innerHTML = '<span class="error">Pilih file terlebih dahulu.</span>';
+            return;
+        }
+
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: "" });
+
+                let nip = '';
+                let month = '';
+                let year = '';
+                let dataStartRow = -1;
+
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (!row[0]) continue;
+                    const cell = row[0].toString();
+
+                    if (cell.includes('NIP :')) {
+                        const match = cell.match(/NIP\s*:\s*(\d+)/);
+                        if (match) nip = match[1];
+                    }
+                    if (cell.includes('Absensi :')) {
+                        const match = cell.match(/Absensi\s*:\s*(\w+)\s*(\d{4})/);
+                        if (match) {
+                            month = match[1];
+                            year = match[2];
+                        }
+                    }
+                    if (cell === 'TANGGAL') {
+                        dataStartRow = i + 1;
+                        break;
+                    }
+                }
+
+                if (!nip || !month || !year || dataStartRow === -1) {
+                    throw new Error('Format file tidak sesuai. Pastikan metadata (NIP, Absensi) dan header TANGGAL ada.');
+                }
+
+                const monthMap = {
+                    'January': '01', 'February': '02', 'March': '03', 'April': '04',
+                    'May': '05', 'June': '06', 'July': '07', 'August': '08',
+                    'September': '09', 'October': '10', 'November': '11', 'December': '12'
+                };
+                const monthNum = monthMap[month];
+                if (!monthNum) {
+                    throw new Error(`Nama bulan "${month}" tidak dikenali. Gunakan nama bulan Inggris (January, February, dll).`);
+                }
+
+                const outputRows = [];
+
+                for (let i = dataStartRow; i < rows.length; i++) {
+                    const row = rows[i];
+                    const day = row[0];
+                    const datang = row[2];
+                    const pulang = row[3];
+                    const keterangan = row[4];
+
+                    if (!day || isNaN(parseInt(day))) continue;
+
+                    const tanggal = `${day}/${monthNum}/${year}`;
+
+                    if (datang && datang.toString().trim() !== '') {
+                        outputRows.push({
+                            NIP: nip,
+                            TANGGAL: tanggal,
+                            KATEGORI: 'Masuk',
+                            JENIS: keterangan || '',
+                            WAKTU: datang,
+                            KETERANGAN: ''
+                        });
+                    }
+                    if (pulang && pulang.toString().trim() !== '') {
+                        outputRows.push({
+                            NIP: nip,
+                            TANGGAL: tanggal,
+                            KATEGORI: 'Pulang',
+                            JENIS: keterangan || '',
+                            WAKTU: pulang,
+                            KETERANGAN: ''
+                        });
+                    }
+                }
+
+                if (outputRows.length === 0) {
+                    throw new Error('Tidak ada data absensi yang ditemukan.');
+                }
+
+                const previewBody = document.getElementById('previewBody');
+                previewBody.innerHTML = '';
+                outputRows.forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${escapeHtml(row.NIP)}</td>
+                        <td>${escapeHtml(row.TANGGAL)}</td>
+                        <td>${escapeHtml(row.KATEGORI)}</td>
+                        <td>${escapeHtml(row.JENIS)}</td>
+                        <td>${escapeHtml(row.WAKTU)}</td>
+                        <td>${escapeHtml(row.KETERANGAN)}</td>
+                    `;
+                    previewBody.appendChild(tr);
+                });
+
+                const newWorkbook = XLSX.utils.book_new();
+                const newSheetData = [
+                    ['NIP', 'TANGGAL', 'KATEGORI', 'JENIS', 'WAKTU', 'KETERANGAN'],
+                    ...outputRows.map(row => [
+                        row.NIP,
+                        row.TANGGAL,
+                        row.KATEGORI,
+                        row.JENIS,
+                        row.WAKTU,
+                        row.KETERANGAN
+                    ])
+                ];
+                const newSheet = XLSX.utils.aoa_to_sheet(newSheetData);
+                XLSX.utils.book_append_sheet(newWorkbook, newSheet, 'Template Import Absensi');
+                currentWorkbook = newWorkbook;
+
+                previewSection.classList.remove('hidden');
+                statusDiv.innerHTML = '<span class="success">Konversi berhasil! Preview siap, klik Download untuk menyimpan file.</span>';
+            } catch (err) {
+                statusDiv.innerHTML = `<span class="error">Error: ${err.message}</span>`;
+                console.error(err);
+                previewSection.classList.add('hidden');
+            }
+        };
+
+        reader.onerror = function() {
+            statusDiv.innerHTML = '<span class="error">Gagal membaca file.</span>';
+            previewSection.classList.add('hidden');
+        };
+
+        reader.readAsArrayBuffer(file);
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', function() {
+        if (!currentWorkbook) {
+            alert('Tidak ada data untuk diunduh. Silakan proses file terlebih dahulu.');
+            return;
+        }
+
+        const outputFile = XLSX.write(currentWorkbook, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([outputFile], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Template_Import_Absensi.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
+</script>
+</body>
+</html>

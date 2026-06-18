@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verkom Faskes - Auto Header</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        font-size: 13px;
+        margin: 0;
+        background: #f0f2f5;
+    }
+
+    .container {
+        background: white;
+        min-height: 100vh;
+        padding: 12px;
+        max-width: 1400px;
+        margin: auto;
+        box-sizing: border-box;
+    }
+
+    .app-header {
+        text-align: center;
+        border-bottom: 3px solid #1976d2;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+    }
+
+    .app-header h1 {
+        font-size: 22px;
+        color: #1976d2;
+        margin: 5px 0;
+    }
+
+    .row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+    }
+
+    .col {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 250px;
+    }
+
+    label {
+        font-weight: bold;
+        font-size: 12px;
+        color: #444;
+    }
+
+    input, select {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 13px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .btn-pdf {
+        background: #1976d2;
+        color: white;
+        padding: 14px;
+        border: none;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 15px;
+        width: 100%;
+        cursor: pointer;
+        margin: 10px 0;
+    }
+
+    .btn-pdf:hover {
+        background: #0d47a1;
+    }
+
+    .meta-box {
+        font-size: 12px;
+        background: #e3f2fd;
+        padding: 12px;
+        border-radius: 4px;
+        margin-bottom: 10px;
+        border-left: 4px solid #1976d2;
+    }
+
+    .meta-grid {
+        display: grid;
+        grid-template-columns: 120px 10px auto;
+        gap: 5px;
+        line-height: 1.6;
+    }
+
+    .meta-label {
+        font-weight: bold;
+        color: #1976d2;
+    }
+
+    .table-scroll {
+        width: 100%;
+        overflow-x: auto;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    table {
+        border-collapse: collapse;
+        min-width: 1300px;
+        width: 100%;
+    }
+
+    th, td {
+        border: 1px solid #000;
+        padding: 5px;
+        text-align: center;
+        font-size: 11px;
+        min-height: 28px;
+    }
+
+    td {
+        height: 30px;
+    }
+
+    .col-nama {
+        min-width: 130px;
+        text-align: center;
+    }
+
+    .col-nik {
+        min-width: 120px;
+    }
+
+    .col-faskes {
+        min-width: 150px;
+        text-align: center;
+    }
+
+    th {
+        background: #bbdefb;
+        color: #000;
+        font-weight: bold;
+    }
+
+    tbody tr:nth-child(even) {
+        background: #fafafa;
+    }
+
+    .footer-preview {
+        margin-top: 20px;
+        padding: 15px;
+        border-top: 1px dashed #ccc;
+        display: flex;
+        justify-content: space-between;
+        text-align: center;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .sig-box {
+        width: 45%;
+        min-width: 250px;
+    }
+
+    .line {
+        height: 50px;
+        border-bottom: 1px solid #000;
+        margin-bottom: 5px;
+        width: 80%;
+        margin: 0 auto;
+    }
+
+    .name-pnd {
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-top: 10px;
+        display: block;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="app-header">
+        <h1>SISTEM VERIFIKASI KOMITMEN FASKES</h1>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <label>Jumlah Baris Data</label>
+            <input type="number" id="jumlahBaris" value="10" min="1">
+        </div>
+
+        <div class="col">
+            <label>Tempat / Lokasi</label>
+            <input type="text" id="inputTempat" placeholder="Contoh: Pelepat Ilir" oninput="updatePreview()">
+        </div>
+		
+		<div class="col">
+    <label>Tanggal Surat</label>
+    <input type="date" id="inputTanggal" onchange="updatePreview()">
+</div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <label>Jumlah Kolom Bulan</label>
+            <select id="jmlBulan" onchange="updateTableStructure()">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3" selected>3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+            </select>
+        </div>
+
+        <div class="col">
+            <label>Buat Tabel</label>
+            <button onclick="generateEmptyRows()" class="btn-pdf">
+                GENERATE TABEL
+            </button>
+        </div>
+    </div>
+	
+	<div class="row">
+    <div class="col">
+        <label>Input Nama Kolektif (Pisahkan Dengan Koma)</label>
+        <input type="text" id="inputNamaMassal"
+        placeholder="ANI, BUDI, CICI">
+    </div>
+
+    <div class="col">
+        <label>Input NIK Kolektif (Pisahkan Dengan Koma)</label>
+        <input type="text" id="inputNikMassal"
+        placeholder="1601xxxx,1602xxxx,1603xxxx">
+    </div>
+</div>
+
+    <div class="row">
+        <div class="col">
+            <label>Nama Pendamping</label>
+            <input type="text" id="inputNamaPnd" placeholder="Nama Lengkap" oninput="updatePreview()">
+        </div>
+
+        <div class="col">
+            <label>NIP Pendamping</label>
+            <input type="text" id="inputNipPnd" placeholder="NIP Pendamping" oninput="updatePreview()">
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <label>Nama Bulan (Pisahkan Koma)</label>
+            <input type="text" id="inputBulan" value="JANUARI, FEBRUARI, MARET" oninput="updateTableStructure()">
+        </div>
+
+        <div class="col">
+            <label>Jumlah Bulan</label>
+            <select id="jmlBulan" onchange="updateTableStructure()">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3" selected>3</option>
+            </select>
+        </div>
+    </div>
+
+    <button onclick="exportToPDF()" class="btn-pdf">
+        DOWNLOAD PDF
+    </button>
+
+    <div class="meta-box">
+        <div class="meta-grid">
+            <div class="meta-label">Jenis Form</div>
+            <div>:</div>
+            <div>VERIFIKASI KOMITMEN FASKES</div>
+
+            <div class="meta-label">Periode</div>
+            <div>:</div>
+            <div id="periodeView">JANUARI - MARET</div>
+        </div>
+    </div>
+
+    <div class="table-scroll">
+        <table id="verkomTable">
+            <thead id="tableHead"></thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+    <div class="footer-preview">
+
+        <div class="sig-box">
+            Mengetahui,<br>
+            Pihak Faskes
+
+            <div class="line"></div>
+
+            .............................................<br>
+            NIP. ........................................
+        </div>
+
+        <div class="sig-box">
+            <span id="prevTgl">-</span><br>
+            ASN PPPK Kemensos RI
+
+            <div class="line"></div>
+
+            <span id="prevNama" class="name-pnd">-</span>
+            NIP. <span id="prevNip">-</span>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+let rawData = [];
+
+function getFormattedDate() {
+
+    const inputDate = document.getElementById('inputTanggal').value;
+
+    let d = inputDate ? new Date(inputDate) : new Date();
+
+    const bln = [
+        "Januari",
+        "Februari",
+        "Maret",
+        "April",
+        "Mei",
+        "Juni",
+        "Juli",
+        "Agustus",
+        "September",
+        "Oktober",
+        "November",
+        "Desember"
+    ];
+
+    return `${d.getDate()} ${bln[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function updatePreview() {
+
+    const tpt = document.getElementById('inputTempat').value || "........";
+
+    document.getElementById('prevTgl').innerText = `${tpt}, ${getFormattedDate()}`;
+
+    document.getElementById('prevNama').innerText =
+        document.getElementById('inputNamaPnd').value || "....................";
+
+    document.getElementById('prevNip').innerText =
+        document.getElementById('inputNipPnd').value || "....................";
+
+    document.getElementById('periodeView').innerText =
+        document.getElementById('inputBulan').value;
+}
+
+function updateTableStructure() {
+
+    const jml = parseInt(document.getElementById('jmlBulan').value);
+
+    const blnArr = document.getElementById('inputBulan').value
+        .split(',')
+        .map(s => s.trim());
+
+    const head = document.getElementById('tableHead');
+
+    let h1 = `
+    <tr>
+        <th rowspan="2" style="min-width:50px">NO</th>
+        <th rowspan="2" class="col-nama">NAMA</th>
+        <th rowspan="2" class="col-nik">NIK</th>
+        <th rowspan="2" style="min-width:70px">UMUR</th>
+        <th rowspan="2" class="col-faskes">NAMA FASKES</th>
+    `;
+
+    for(let i = 0; i < jml; i++) {
+        h1 += `<th colspan="2">${(blnArr[i] || 'BULAN').toUpperCase()}</th>`;
+    }
+
+    h1 += `
+        <th rowspan="2">JUMLAH KEHADIRAN %</th>
+        <th rowspan="2">DOK PENDUKUNG</th>
+        <th rowspan="2">KOMIT / TIDAK</th>
+        <th rowspan="2">NAMA PETUGAS</th>
+    </tr>`;
+
+    let h2 = `<tr>`;
+
+    for(let i = 0; i < jml; i++) {
+        h2 += `
+            <th>HADIR</th>
+            <th>TIDAK</th>
+        `;
+    }
+
+    h2 += `</tr>`;
+
+    head.innerHTML = h1 + h2;
+
+    if(rawData.length > 0) {
+        renderTable(rawData);
+    }
+}
+
+
+function generateEmptyRows() {
+
+    const jumlah = parseInt(document.getElementById('jumlahBaris').value) || 10;
+
+    const namaMassal = document.getElementById('inputNamaMassal').value
+        .split(',')
+        .map(x => x.trim());
+
+    const nikMassal = document.getElementById('inputNikMassal').value
+        .split(',')
+        .map(x => x.trim());
+
+    rawData = [];
+
+    for(let i = 1; i <= jumlah; i++) {
+
+        const nama = namaMassal[i - 1] || '';
+        const nik = nikMassal[i - 1] || '';
+
+        rawData.push([
+            i,
+            nama,
+            nik,
+            hitungUmurDariNIK(nik),
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            ''
+        ]);
+    }
+
+    renderTable(rawData);
+}
+
+function hitungUmurDariNIK(nik) {
+
+    nik = String(nik).replace(/\D/g, '');
+
+    if(nik.length < 12) return '';
+
+    let tgl = parseInt(nik.substring(6,8));
+    let bln = parseInt(nik.substring(8,10));
+    let thn = parseInt(nik.substring(10,12));
+
+    if(tgl > 40) {
+        tgl -= 40;
+    }
+
+    const tahunSekarang = new Date().getFullYear() % 100;
+
+    let tahunLahir = thn <= tahunSekarang ? 2000 + thn : 1900 + thn;
+
+    const today = new Date();
+
+    let umur = today.getFullYear() - tahunLahir;
+
+    const bulanNow = today.getMonth() + 1;
+    const tanggalNow = today.getDate();
+
+    if(bulanNow < bln || (bulanNow === bln && tanggalNow < tgl)) {
+        umur--;
+    }
+
+    return umur;
+}
+
+function renderTable(rows) {
+
+    const body = document.getElementById('tableBody');
+
+    const jmlBulan = parseInt(document.getElementById('jmlBulan').value);
+
+    body.innerHTML = "";
+
+    rows.forEach(row => {
+
+        const tr = document.createElement('tr');
+
+        [0,1,2,3,4].forEach(i => {
+
+            const td = document.createElement('td');
+
+            td.contentEditable = true;
+
+            td.textContent = row[i] || "";
+
+            if(i === 1) td.classList.add('col-nama');
+            if(i === 2) td.classList.add('col-nik');
+
+                td.addEventListener('input', function() {
+                    const nik = td.innerText.trim();
+                    const umurCell = tr.children[3];
+                    umurCell.innerText = hitungUmurDariNIK(nik);
+                });
+            if(i === 4) td.classList.add('col-faskes');
+
+            tr.appendChild(td);
+        });
+
+        let start = 5;
+
+        for(let i = 0; i < jmlBulan; i++) {
+
+            const hadir = document.createElement('td');
+            hadir.contentEditable = true;
+            hadir.textContent = row[start] || "";
+            tr.appendChild(hadir);
+
+            const tidakHadir = document.createElement('td');
+            tidakHadir.contentEditable = true;
+            tidakHadir.textContent = row[start + 1] || "";
+            tr.appendChild(tidakHadir);
+
+            start += 2;
+        }
+
+        const tdPersen = document.createElement('td');
+        tdPersen.contentEditable = true;
+        tdPersen.textContent = row[11] || "";
+        tr.appendChild(tdPersen);
+
+        const tdDok = document.createElement('td');
+        tdDok.contentEditable = true;
+        tdDok.textContent = row[12] || "";
+        tr.appendChild(tdDok);
+
+        const tdKomit = document.createElement('td');
+        tdKomit.contentEditable = true;
+        tdKomit.textContent = row[13] || "";
+        tr.appendChild(tdKomit);
+
+        const tdPetugas = document.createElement('td');
+        tdPetugas.contentEditable = true;
+        tdPetugas.textContent = row[14] || "";
+        tr.appendChild(tdPetugas);
+
+        body.appendChild(tr);
+    });
+}
+
+function exportToPDF() {
+
+    const { jsPDF } = window.jspdf;
+
+    const doc = new jsPDF('l', 'mm', 'a4');
+
+    const tgl = getFormattedDate();
+
+    const tempat = document.getElementById('inputTempat').value || "........";
+
+    const namaPnd = document.getElementById('inputNamaPnd').value || "....................";
+
+    const nipPnd = document.getElementById('inputNipPnd').value || "....................";
+
+    doc.setFontSize(11)
+       .setFont(undefined, 'bold')
+       .text("FORM VERIFIKASI KOMITMEN FASKES", 148, 12, { align: "center" });
+
+    doc.setFontSize(9)
+       .setFont(undefined, 'normal');
+
+    doc.text(`Jenis : Verifikasi Komitmen Faskes`, 14, 20);
+
+    doc.text(`Periode : ${document.getElementById('inputBulan').value}`, 14, 24);
+
+    doc.autoTable({
+
+        html: '#verkomTable',
+
+        startY: 28,
+
+        theme: 'grid',
+
+        headStyles: {
+            fillColor: [187, 222, 251],
+            textColor: [0,0,0],
+            lineColor: [0,0,0],
+            lineWidth: 0.1,
+            halign: 'center',
+            valign: 'middle'
+        },
+
+        styles: {
+            fontSize: 11,
+            cellPadding: 1,
+            lineColor: [0,0,0],
+            lineWidth: 0.1,
+            halign: 'center',
+            valign: 'middle'
+        },
+
+        margin: {
+            bottom: 50
+        }
+    });
+
+    const totalPages = doc.internal.getNumberOfPages();
+
+    doc.setPage(totalPages);
+
+    let finalY = doc.lastAutoTable.finalY + 10;
+
+    if(finalY > 165) {
+        doc.addPage();
+        finalY = 20;
+    }
+
+    doc.setFontSize(9);
+
+    doc.text("Mengetahui,", 40, finalY + 5);
+    doc.text("Pihak Faskes", 40, finalY + 10);
+
+    doc.text(" ..................................................... ", 40, finalY + 30);
+    doc.text("NIP. .....................................................", 40, finalY + 35);
+
+    doc.text(`${tempat}, ${tgl}`, 210, finalY + 5);
+
+    doc.text("ASN PPPK Kemensos RI", 210, finalY + 10);
+
+    doc.setFont(undefined, 'bold')
+       .text(namaPnd.toUpperCase(), 210, finalY + 30);
+
+    doc.setFont(undefined, 'normal')
+       .text(`NIP. ${nipPnd}`, 210, finalY + 35);
+
+    doc.save(`Verkom_Faskes.pdf`);
+}
+
+updateTableStructure();
+updatePreview();
+generateEmptyRows();
+
+</script>
+
+</body>
+</html>
+```

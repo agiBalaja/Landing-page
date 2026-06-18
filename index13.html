@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Simulasi 39 Variabel Ground Check DTSEN</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #e9f0f5;
+            margin: 0;
+            padding: 20px;
+            color: #1e2a3e;
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.1);
+            overflow: hidden;
+            padding: 20px 25px 35px;
+        }
+        h1 {
+            font-size: 1.7rem;
+            margin-top: 0;
+            color: #0b3b5f;
+            border-left: 6px solid #2c7da0;
+            padding-left: 18px;
+        }
+        .sub {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            background: #f0f7fc;
+            padding: 10px 18px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+        }
+        .section {
+            background: #fefefe;
+            border-radius: 24px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            border: 1px solid #dce9f2;
+            overflow: hidden;
+        }
+        .section h2 {
+            background: #1f6392;
+            color: white;
+            margin: 0;
+            padding: 14px 24px;
+            font-size: 1.3rem;
+            font-weight: 500;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+            gap: 18px;
+            padding: 22px 24px;
+        }
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .field label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #1f6392;
+            letter-spacing: 0.3px;
+        }
+        select, input {
+            padding: 10px 12px;
+            border-radius: 16px;
+            border: 1px solid #bdd3e4;
+            background: white;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+        select:focus, input:focus {
+            outline: none;
+            border-color: #2c7da0;
+            box-shadow: 0 0 0 3px rgba(44,125,160,0.2);
+        }
+        .info-note {
+            font-size: 0.7rem;
+            color: #6c8ba0;
+            margin-top: 4px;
+        }
+        .result-box {
+            background: #eef4fc;
+            border-radius: 28px;
+            padding: 18px 24px;
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #caddf0;
+        }
+        .score {
+            background: #0b3b5f;
+            padding: 12px 24px;
+            border-radius: 60px;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+        }
+        .desil {
+            background: #2c7da0;
+            padding: 12px 24px;
+            border-radius: 60px;
+            color: white;
+            font-weight: bold;
+        }
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0 0;
+            flex-wrap: wrap;
+        }
+        button {
+            background: #1f6392;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 40px;
+            font-weight: bold;
+            font-size: 1rem;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid #ffffff50;
+        }
+        button:hover {
+            background: #0e4b6e;
+            transform: scale(1.01);
+        }
+        .reset-btn {
+            background: #5f7f9a;
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.75rem;
+            color: #6c86a0;
+        }
+        @media (max-width: 700px) {
+            .grid { padding: 16px; gap: 12px; }
+            .result-box { flex-direction: column; gap: 12px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📋 Simulasi 39 Variabel Ground Check</h1>
+    <div class="sub">🔍 Isi semua data dengan jujur sesuai kondisi rumah tangga. Sistem akan menghitung skor kesejahteraan → menentukan Desil (1 termiskin s/d 10 terkaya). Prioritas bansos: Desil 1-4.</div>
+
+    <form id="groundCheckForm">
+        <!-- BAGIAN INDIVIDU (13 Variabel) -->
+        <div class="section">
+            <h2>👤 13 Variabel Individu (Kepala Keluarga / Responden)</h2>
+            <div class="grid">
+                <div class="field"><label>1. Status perkawinan</label>
+                    <select id="perkawinan">
+                        <option value="20">Belum kawin</option><option value="35">Kawin</option><option value="10">Cerai hidup/mati</option>
+                    </select><div class="info-note">Bobot: Kawin lebih stabil</div></div>
+                <div class="field"><label>2. Pendidikan tertinggi</label>
+                    <select id="pendidikan">
+                        <option value="10">Tidak sekolah / SD</option><option value="30">SMP</option><option value="50">SMA</option><option value="80">Diploma/S1+</option>
+                    </select></div>
+                <div class="field"><label>3. Jenis pekerjaan utama</label>
+                    <select id="pekerjaan">
+                        <option value="15">Tidak bekerja / petani buruh</option><option value="35">Buruh/karyawan swasta</option><option value="60">Wiraswasta/UMKM</option><option value="85">PNS/BUMN/profesional</option>
+                    </select></div>
+                <div class="field"><label>4. Kepemilikan usaha</label>
+                    <select id="usaha">
+                        <option value="10">Tidak punya usaha</option><option value="45">Punya usaha kecil</option><option value="70">Punya usaha berkembang</option>
+                    </select></div>
+                <div class="field"><label>5. Status disabilitas</label>
+                    <select id="disabilitas"><option value="5">Ya (berat/sedang)</option><option value="15">Ya (ringan)</option><option value="30">Tidak</option></select></div>
+                <div class="field"><label>6. Riwayat penyakit kronis</label>
+                    <select id="penyakit"><option value="5">Ya, memberatkan ekonomi</option><option value="20">Ya, terkontrol</option><option value="40">Tidak ada</option></select></div>
+                <div class="field"><label>7. Kepemilikan BPJS Kesehatan</label>
+                    <select id="bpjs"><option value="15">Tidak punya</option><option value="30">PBI (bantuan iuran)</option><option value="50">Mandiri/BPJS mandiri</option></select></div>
+                <div class="field"><label>8. Merokok (pengeluaran rutin)</label>
+                    <select id="merokok"><option value="5">Merokok aktif (≥1 bungkus/hari)</option><option value="12">Kadang-kadang</option><option value="25">Tidak merokok</option></select></div>
+                <div class="field"><label>9. Akses internet pribadi</label>
+                    <select id="internet"><option value="8">Tidak punya/ tidak bisa akses</option><option value="20">Paket data terbatas</option><option value="40">Rumah ada wifi / smartphone mumpuni</option></select></div>
+                <div class="field"><label>10. Jumlah tanggungan keluarga (selain KK)</label>
+                    <select id="tanggungan"><option value="30">0-1 orang</option><option value="20">2-3 orang</option><option value="10">4 orang lebih</option></select></div>
+                <div class="field"><label>11. Tingkat partisipasi sekolah anak (jika ada)</label>
+                    <select id="sekolah"><option value="15">Ada anak tidak sekolah</option><option value="35">Semua anak sekolah dasar</option><option value="55">Ada yang ke jenjang tinggi</option></select></div>
+                <div class="field"><label>12. Kepemilikan rekening bank / fintech</label>
+                    <select id="rekening"><option value="5">Tidak punya</option><option value="20">Punya, saldo minimal</option><option value="40">Aktif menabung</option></select></div>
+                <div class="field"><label>13. Jumlah aset emas/perhiasan</label>
+                    <select id="emas"><option value="5">Tidak punya / hanya imitasi</option><option value="15">Kurang dari 5 gram</option><option value="35">5 gram atau lebih</option></select></div>
+            </div>
+        </div>
+
+        <!-- BAGIAN KELUARGA (26 Variabel) -->
+        <div class="section">
+            <h2>🏠 26 Variabel Keluarga (Kondisi Rumah & Aset)</h2>
+            <div class="grid">
+                <div class="field"><label>14. Status kepemilikan rumah</label><select id="milikRumah"><option value="10">Kontrak/sewa/ngontrak</option><option value="25">Milik sendiri, belum sertifikat</option><option value="40">Milik sendiri, sertifikat</option></select></div>
+                <div class="field"><label>15. Jenis lantai rumah</label><select id="lantai"><option value="10">Tanah / bambu</option><option value="20">Semen / keramik murah</option><option value="35">Keramik / marmer bagus</option></select></div>
+                <div class="field"><label>16. Jenis dinding</label><select id="dinding"><option value="10">Bambu / kayu berkualitas rendah</option><option value="22">Bata / tembok tanpa plester</option><option value="35">Tembok diplester/ bata ringan</option></select></div>
+                <div class="field"><label>17. Jenis atap</label><select id="atap"><option value="10">Rumbia / seng tipis bocor</option><option value="22">Seng / genteng sederhana</option><option value="35">Genteng beton/ metal bagus</option></select></div>
+                <div class="field"><label>18. Sumber penerangan utama</label><select id="penerangan"><option value="8">Lampu minyak / non listrik</option><option value="20">Listrik < 900 VA</option><option value="35">Listrik ≥ 900 VA</option></select></div>
+                <div class="field"><label>19. Daya listrik terpasang</label><select id="dayaListrik"><option value="5">450 VA / tidak memiliki meteran</option><option value="15">900 VA</option><option value="30">1300 VA ke atas</option></select></div>
+                <div class="field"><label>20. Sumber air minum</label><select id="air"><option value="10">Sungai / sumur tak terlindung</option><option value="22">Sumur bor / pompa biasa</option><option value="40">PDAM / sumur artesis</option></select></div>
+                <div class="field"><label>21. Bahan bakar masak</label><select id="bbmMasak"><option value="8">Kayu bakar / arang</option><option value="20">Gas 3 kg (elpiji subsidi)</option><option value="35">Gas 12 kg / listrik</option></select></div>
+                <div class="field"><label>22. Fasilitas sanitasi (jamban)</label><select id="jamban"><option value="5">Tidak ada / sungai</option><option value="20">Jamban sendiri leher angsa</option><option value="35">Jamban dengan septik tank</option></select></div>
+                <div class="field"><label>23. Kepemilikan sepeda motor</label><select id="motor"><option value="5">Tidak punya</option><option value="18">Punya 1 unit</option><option value="28">Punya ≥2 unit</option></select></div>
+                <div class="field"><label>24. Kepemilikan mobil</label><select id="mobil"><option value="0">Tidak punya</option><option value="8">Punya 1 unit</option><option value="15">Punya ≥2 unit</option></select></div>
+                <div class="field"><label>25. Kepemilikan AC (Air Conditioner)</label><select id="ac"><option value="0">Tidak punya</option><option value="8">Punya 1 unit</option><option value="15">Punya ≥2 unit</option></select></div>
+                <div class="field"><label>26. Kepemilikan smartphone / tablet</label><select id="hp"><option value="5">Tidak ada / hanya hp kuno</option><option value="18">1 smartphone</option><option value="30">≥2 smartphone</option></select></div>
+                <div class="field"><label>27. Kepemilikan televisi LED/LCD</label><select id="tv"><option value="8">Tidak punya / tabung kecil</option><option value="18">TV LED ukuran sedang</option><option value="30">TV besar/smart TV</option></select></div>
+                <div class="field"><label>28. Kepemilikan kulkas</label><select id="kulkas"><option value="0">Tidak punya</option><option value="15">Punya kulkas 1 pintu</option><option value="30">2 pintu / inverter</option></select></div>
+                <div class="field"><label>29. Kepemilikan mesin cuci</label><select id="mesinCuci"><option value="0">Tidak punya</option><option value="12">Punya mesin cuci</option><option value="20">Mesin cuci otomatis</option></select></div>
+                <div class="field"><label>30. Jumlah ternak (sapi/kambing/ayam >10 ekor)</label><select id="ternak"><option value="0">Tidak punya</option><option value="10">Ternak kecil (<5 ekor)</option><option value="22">Ternak besar atau >5 ekor</option></select></div>
+                <div class="field"><label>31. Luas lantai rumah per kapita</label><select id="luas"><option value="8">< 7 m²/orang</option><option value="18">7-15 m²/orang</option><option value="30">>15 m²/orang</option></select></div>
+                <div class="field"><label>32. Frekuensi makan daging/susu dalam seminggu</label><select id="gizi"><option value="5">Jarang / tidak pernah</option><option value="15">1-2 kali</option><option value="30">≥3 kali</option></select></div>
+                <div class="field"><label>33. Kemampuan berobat ke fasilitas kesehatan</label><select id="berobat"><option value="10">Sulit / tidak mampu</option><option value="25">Mampu dengan biaya terbatas</option><option value="40">Mampu tanpa kendala</option></select></div>
+                <div class="field"><label>34. Tabungan keluarga</label><select id="tabungan"><option value="5">Tidak punya tabungan</option><option value="15">Tabungan < 500rb</option><option value="35">Tabungan ≥ 500rb</option></select></div>
+                <div class="field"><label>35. Pinjaman online / bank (konsumtif)</label><select id="pinjaman"><option value="8">Memiliki pinjaman memberatkan</option><option value="15">Pinjaman ringan/terkendali</option><option value="35">Tidak punya utang produktif</option></select></div>
+                <div class="field"><label>36. Penerimaan bantuan sosial saat ini</label><select id="bansos"><option value="5">Ya, PKH/BPNT</option><option value="15">Pernah tapi tidak stabil</option><option value="30">Tidak menerima</option></select></div>
+                <div class="field"><label>37. Kondisi lantai kamar mandi</label><select id="lantaiKm"><option value="8">Tanah / papan tidak kedap</option><option value="18">Semen kedap air</option><option value="32">Keramik/plester rapi</option></select></div>
+                <div class="field"><label>38. Akses ke layanan pengelolaan sampah</label><select id="sampah"><option value="5">Dibuang sungai/dibakar</option><option value="15">Tempat sampah sendiri</option><option value="28">Diangkut petugas</option></select></div>
+                <div class="field"><label>39. Kepemilikan laptop/komputer</label><select id="laptop"><option value="0">Tidak punya</option><option value="15">Punya 1 unit/laptop</option><option value="25">≥1 unit high-end</option></select></div>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button type="button" id="hitungBtn">📊 Hitung Skor & Desil</button>
+            <button type="reset" class="reset-btn" id="resetBtn">⟳ Reset Semua</button>
+        </div>
+    </form>
+
+    <div class="result-box" id="resultArea">
+        <div class="score">Skor Kesejahteraan: <span id="skorValue">—</span></div>
+        <div class="desil">Desil (1-10): <span id="desilValue">—</span></div>
+        <div><strong>💡 Prioritas bansos:</strong> Desil 1-4 (sangat berhak), Desil 5-6 (rentan), Desil 7-10 (mampu)</div>
+    </div>
+    <footer>⚠️ Simulasi berdasarkan 39 variabel pendekatan. Bukan kebijakan resmi DTSEN. Nilai desil dihitung dari total skor (range 200–1250).</footer>
+</div>
+
+<script>
+    // Fungsi untuk mengumpulkan semua nilai select (bobot) dan total skor
+    function hitungSkor() {
+        let total = 0;
+        // Daftar semua ID element select yang merepresentasikan 39 variabel
+        const ids = [
+            "perkawinan","pendidikan","pekerjaan","usaha","disabilitas","penyakit","bpjs","merokok","internet","tanggungan","sekolah","rekening","emas",
+            "milikRumah","lantai","dinding","atap","penerangan","dayaListrik","air","bbmMasak","jamban","motor","mobil","ac","hp","tv","kulkas","mesinCuci","ternak","luas","gizi","berobat","tabungan","pinjaman","bansos","lantaiKm","sampah","laptop"
+        ];
+        for (let id of ids) {
+            let el = document.getElementById(id);
+            if (el && el.value) {
+                total += parseInt(el.value);
+            } else if (el) {
+                total += 0;
+            }
+        }
+        return total;
+    }
+
+    // konversi total skor ke desil (1 = termiskin, 10 = terkaya)
+    // asumsi skor minimal ~ 200 (jika semua pilihan terendah) dan maksimal ~ 1250 (pilihan tertinggi)
+    function tentukanDesil(skor) {
+        // boundary desil berdasarkan distribusi linier sederhana
+        // skor minimal ~200, maksimal ~1250 => rentang 1050 poin
+        let minSkor = 200, maxSkor = 1250;
+        if (skor <= minSkor) return 1;
+        if (skor >= maxSkor) return 10;
+        // rumus: posisi dalam rentang 0-1, lalu bagi 9 desil +1
+        let norm = (skor - minSkor) / (maxSkor - minSkor);
+        let desil = Math.floor(norm * 10) + 1;
+        if (desil < 1) desil = 1;
+        if (desil > 10) desil = 10;
+        return desil;
+    }
+
+    function updateHasil() {
+        let skor = hitungSkor();
+        let desil = tentukanDesil(skor);
+        document.getElementById("skorValue").innerText = skor;
+        document.getElementById("desilValue").innerText = desil;
+        // warna tambahan keterangan
+        let desilSpan = document.getElementById("desilValue");
+        if (desil <= 4) desilSpan.style.background = "#d9534f";
+        else if (desil <= 6) desilSpan.style.background = "#f0ad4e";
+        else desilSpan.style.background = "#5cb85c";
+        desilSpan.style.padding = "4px 12px";
+        desilSpan.style.borderRadius = "40px";
+        desilSpan.style.display = "inline-block";
+    }
+
+    function resetForm() {
+        document.getElementById("groundCheckForm").reset();
+        // setelah reset, kosongkan hasil
+        document.getElementById("skorValue").innerText = "—";
+        document.getElementById("desilValue").innerText = "—";
+        let desilSpan = document.getElementById("desilValue");
+        desilSpan.style.background = "#2c7da0";
+    }
+
+    document.getElementById("hitungBtn").addEventListener("click", updateHasil);
+    document.getElementById("resetBtn").addEventListener("click", resetForm);
+    // optional: hitung otomatis ketika ada perubahan (tidak wajib tapi nyaman)
+    const allSelects = document.querySelectorAll("select");
+    for (let sel of allSelects) {
+        sel.addEventListener("change", () => {
+            // bisa otomatis hitung jika user mau, tapi untuk performa optional
+            // updateHasil();   // uncomment jika ingin realtime
+        });
+    }
+    // tambahkan tooltip sederhana
+    console.log("Script siap. Lengkapi 39 data lalu klik Hitung.");
+</script>
+</body>
+</html>

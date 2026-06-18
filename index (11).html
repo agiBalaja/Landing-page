@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Resizer Pro | Ubah Ukuran Foto dengan Mudah</title>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DV25BYV3TL"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-DV25BYV3TL');
+</script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Custom styles that Tailwind can't handle easily */
+    .gradient-bg {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    }
+    .drop-zone {
+      border: 2px dashed #cbd5e0;
+      transition: all 0.3s;
+    }
+    .drop-zone.active {
+      border-color: #667eea;
+      background-color: #ebf4ff;
+    }
+    .image-preview {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .image-preview:hover {
+      transform: scale(1.02);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+  </style>
+</head>
+<body class="gradient-bg min-h-screen font-['Poppins']">
+  <div class="container mx-auto px-4 py-12">
+    <!-- Header Section -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl font-bold text-gray-800 mb-3">
+        <span class="text-indigo-600">Image</span> Resizer Pro
+      </h1>
+      <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+        Ubah ukuran foto Anda dengan mudah. Upload, atur dimensi, dan download - semuanya dalam satu tempat!
+      </p>
+    </div>
+
+    <!-- Main Card -->
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden max-w-4xl mx-auto">
+      <div class="p-6 md:p-8">
+        <!-- Upload Section -->
+        <div class="mb-8">
+          <div 
+            id="dropZone" 
+            class="drop-zone rounded-lg p-12 text-center cursor-pointer mb-4"
+            ondragover="event.preventDefault(); this.classList.add('active')"
+            ondragleave="this.classList.remove('active')"
+            ondrop="handleDrop(event)"
+          >
+            <div class="flex flex-col items-center justify-center space-y-4">
+              <i class="fas fa-cloud-upload-alt text-4xl text-indigo-400"></i>
+              <h3 class="text-xl font-semibold text-gray-700">Seret & Jatuhkan gambar di sini</h3>
+              <p class="text-gray-500">atau</p>
+              <label 
+                for="fileInput" 
+                class="px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium cursor-pointer hover:bg-indigo-700 transition-colors"
+              >
+                <i class="fas fa-folder-open mr-2"></i> Pilih File
+              </label>
+              <input id="fileInput" type="file" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
+            </div>
+          </div>
+          <p id="fileName" class="text-sm text-gray-500 text-center italic"></p>
+        </div>
+
+        <!-- Controls Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <!-- Dimensions Input -->
+          <div class="space-y-4">
+            <div>
+              <label for="widthInput" class="block text-sm font-medium text-gray-700 mb-1">
+                <i class="fas fa-arrows-alt-h mr-2 text-indigo-500"></i> Lebar (px)
+              </label>
+              <div class="relative">
+                <input 
+                  type="number" 
+                  id="widthInput" 
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Masukkan lebar..."
+                  min="10"
+                >
+              </div>
+            </div>
+            
+            <div>
+              <label for="heightInput" class="block text-sm font-medium text-gray-700 mb-1">
+                <i class="fas fa-arrows-alt-v mr-2 text-indigo-500"></i> Tinggi (px)
+              </label>
+              <div class="relative">
+                <input 
+                  type="number" 
+                  id="heightInput" 
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Masukkan tinggi..."
+                  min="10"
+                >
+              </div>
+            </div>
+            
+            <div class="pt-2">
+              <label class="inline-flex items-center">
+                <input 
+                  type="checkbox" 
+                  id="aspectRatioCheck" 
+                  class="rounded text-indigo-600 focus:ring-indigo-500" 
+                  checked
+                >
+                <span class="ml-2 text-sm text-gray-700">Pertahankan rasio aspek</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Preset Sizes -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              <i class="fas fa-magic mr-2 text-indigo-500"></i> Ukuran Standar
+            </label>
+            <div class="grid grid-cols-3 gap-2">
+              <button 
+                onclick="setPresetSize(800, 600)" 
+                class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm rounded transition-colors"
+              >
+                Medium (800x600)
+              </button>
+              <button 
+                onclick="setPresetSize(1920, 1080)" 
+                class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm rounded transition-colors"
+              >
+                HD (1920x1080)
+              </button>
+              <button 
+                onclick="setPresetSize(1080, 1080)" 
+                class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm rounded transition-colors"
+              >
+                Square (1080x1080)
+              </button>
+              <button 
+                onclick="setPresetSize(150, 150)" 
+                class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm rounded transition-colors"
+              >
+                Thumbnail (150x150)
+              </button>
+              <button 
+                onclick="setPresetSize(1200, 628)" 
+                class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm rounded transition-colors"
+              >
+                Facebook (1200x628)
+              </button>
+              <button 
+                onclick="setPresetSize(1080, 1350)" 
+                class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm rounded transition-colors"
+              >
+                Instagram (1080x1350)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap justify-center gap-4">
+          <button 
+            id="resizeBtn" 
+            onclick="resizeImage()" 
+            class="px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled
+          >
+            <i class="fas fa-expand-alt mr-2"></i> Ubah Ukuran
+          </button>
+          
+          <button 
+            id="downloadBtn" 
+            onclick="downloadImage()" 
+            class="px-6 py-3 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled
+          >
+            <i class="fas fa-download mr-2"></i> Download
+          </button>
+        </div>
+      </div>
+
+      <!-- Preview Section -->
+      <div class="bg-gray-50 p-6 border-t border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+          <i class="fas fa-image mr-2 text-indigo-500"></i> Pratinjau
+        </h3>
+        
+        <div id="infoContainer" class="mb-4">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white p-3 rounded-lg shadow-sm">
+              <p class="text-xs text-gray-500">Ukuran Asli</p>
+              <p id="originalSize" class="font-medium">-</p>
+            </div>
+            <div class="bg-white p-3 rounded-lg shadow-sm">
+              <p class="text-xs text-gray-500">Dimensi Asli</p>
+              <p id="originalDimensions" class="font-medium">-</p>
+            </div>
+            <div class="bg-white p-3 rounded-lg shadow-sm">
+              <p class="text-xs text-gray-500">Ukuran Baru</p>
+              <p id="newSize" class="font-medium">-</p>
+            </div>
+            <div class="bg-white p-3 rounded-lg shadow-sm">
+              <p class="text-xs text-gray-500">Dimensi Baru</p>
+              <p id="newDimensions" class="font-medium">-</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex justify-center">
+          <img 
+            id="previewImage" 
+            alt="Pratinjau gambar" 
+            class="image-preview max-w-full max-h-80 rounded-lg shadow-md border border-gray-200"
+            style="display: none;"
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- Image Info Modal -->
+    <div id="imageInfoModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-bold text-gray-800">Detail Gambar</h3>
+          <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="space-y-3">
+          <div>
+            <p class="text-sm text-gray-500">Nama File:</p>
+            <p id="modalFileName" class="font-medium">-</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Tipe File:</p>
+            <p id="modalFileType" class="font-medium">-</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Ukuran File:</p>
+            <p id="modalFileSize" class="font-medium">-</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Dimensi:</p>
+            <p id="modalDimensions" class="font-medium">-</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Waktu Upload:</p>
+            <p id="modalUploadTime" class="font-medium">-</p>
+          </div>
+        </div>
+        <div class="mt-6">
+          <button 
+            onclick="closeModal()" 
+            class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Global variables
+    let originalImage = null;
+    let resizedImageDataUrl = null;
+    let originalFileName = '';
+    let originalFileSize = '';
+    let originalFileType = '';
+
+    // Elements
+    const widthInput = document.getElementById('widthInput');
+    const heightInput = document.getElementById('heightInput');
+    const aspectRatioCheck = document.getElementById('aspectRatioCheck');
+    const previewImage = document.getElementById('previewImage');
+    const resizeBtn = document.getElementById('resizeBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const fileName = document.getElementById('fileName');
+    const dropZone = document.getElementById('dropZone');
+
+    // Info elements
+    const originalSize = document.getElementById('originalSize');
+    const originalDimensions = document.getElementById('originalDimensions');
+    const newSize = document.getElementById('newSize');
+    const newDimensions = document.getElementById('newDimensions');
+
+    // Modal elements
+    const imageInfoModal = document.getElementById('imageInfoModal');
+    const modalFileName = document.getElementById('modalFileName');
+    const modalFileType = document.getElementById('modalFileType');
+    const modalFileSize = document.getElementById('modalFileSize');
+    const modalDimensions = document.getElementById('modalDimensions');
+    const modalUploadTime = document.getElementById('modalUploadTime');
+
+    // Handle file selection
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (file) {
+        processImageFile(file);
+      }
+    }
+
+    // Handle drop event
+    function handleDrop(event) {
+      event.preventDefault();
+      dropZone.classList.remove('active');
+      
+      const file = event.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) {
+        processImageFile(file);
+      }
+    }
+
+    // Process the image file
+    function processImageFile(file) {
+      // Check if file is an image
+      if (!file.type.startsWith('image/')) {
+        alert('Silakan pilih file gambar!');
+        return;
+      }
+
+      // Update file info
+      originalFileName = file.name;
+      originalFileSize = formatFileSize(file.size);
+      originalFileType = file.type.split('/').pop().toUpperCase();
+      
+      fileName.textContent = `File dipilih: ${originalFileName}`;
+      
+      // Read the file
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        originalImage = new Image();
+        originalImage.onload = function() {
+          // Show original dimensions
+          widthInput.value = originalImage.naturalWidth;
+          heightInput.value = originalImage.naturalHeight;
+          
+          // Update info display
+          originalDimensions.textContent = `${originalImage.naturalWidth} × ${originalImage.naturalHeight} px`;
+          originalSize.textContent = originalFileSize;
+          
+          // Show preview
+          previewImage.src = e.target.result;
+          previewImage.style.display = 'block';
+          
+          // Enable buttons
+          resizeBtn.disabled = false;
+          
+          // Update modal info
+          updateModalInfo();
+        };
+        originalImage.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Format file size
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Set preset dimensions
+    function setPresetSize(width, height) {
+      widthInput.value = width;
+      heightInput.value = height;
+      aspectRatioCheck.checked = false;
+    }
+
+    // Keep aspect ratio when one dimension changes
+    widthInput.addEventListener('input', function() {
+      if (aspectRatioCheck.checked && originalImage) {
+        const ratio = originalImage.naturalHeight / originalImage.naturalWidth;
+        heightInput.value = Math.round(this.value * ratio);
+      }
+    });
+
+    heightInput.addEventListener('input', function() {
+      if (aspectRatioCheck.checked && originalImage) {
+        const ratio = originalImage.naturalWidth / originalImage.naturalHeight;
+        widthInput.value = Math.round(this.value * ratio);
+      }
+    });
+
+    // Resize the image
+    function resizeImage() {
+      if (!originalImage) return;
+      
+      const width = parseInt(widthInput.value);
+      const height = parseInt(heightInput.value);
+      
+      if (isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
+        alert('Masukkan lebar dan tinggi yang valid!');
+        return;
+      }
+      
+      // Create canvas and resize
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(originalImage, 0, 0, width, height);
+      
+      // Get resized image data URL
+      resizedImageDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      
+      // Update preview
+      previewImage.src = resizedImageDataUrl;
+      
+      // Update info display
+      newDimensions.textContent = `${width} × ${height} px`;
+      
+      // Calculate new file size
+      const sizeInBytes = Math.floor((resizedImageDataUrl.length - 'data:image/jpeg;base64,'.length) * 0.75);
+      newSize.textContent = formatFileSize(sizeInBytes);
+      
+      // Enable download button
+      downloadBtn.disabled = false;
+      
+      // Show success message
+      showToast('Gambar berhasil diubah ukuran!', 'success');
+    }
+
+    // Download the resized image
+    function downloadImage() {
+      if (!resizedImageDataUrl) return;
+      
+      const link = document.createElement('a');
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const fileName = `resized-${timestamp}.jpg`;
+      
+      link.href = resizedImageDataUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Show success message
+      showToast('Download berhasil dimulai!', 'success');
+    }
+
+    // Update modal info
+    function updateModalInfo() {
+      modalFileName.textContent = originalFileName;
+      modalFileType.textContent = originalFileType;
+      modalFileSize.textContent = originalFileSize;
+      modalDimensions.textContent = `${originalImage.naturalWidth} × ${originalImage.naturalHeight} px`;
+      modalUploadTime.textContent = new Date().toLocaleString();
+    }
+
+    // Show image info modal
+    function showImageInfo() {
+      imageInfoModal.classList.remove('hidden');
+    }
+
+    // Close modal
+    function closeModal() {
+      imageInfoModal.classList.add('hidden');
+    }
+
+    // Show toast notification
+    function showToast(message, type) {
+      const toast = document.createElement('div');
+      toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white font-medium ${
+        type === 'success' ? 'bg-green-500' : 'bg-red-500'
+      } animate-fade-in`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.classList.add('animate-fade-out');
+        setTimeout(() => {
+          document.body.removeChild(toast);
+        }, 300);
+      }, 3000);
+    }
+
+    // Add animation styles
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes fadeOut {
+        from { opacity: 1; transform: translateY(0); }
+        to { opacity: 0; transform: translateY(10px); }
+      }
+      .animate-fade-in {
+        animation: fadeIn 0.3s ease-out forwards;
+      }
+      .animate-fade-out {
+        animation: fadeOut 0.3s ease-out forwards;
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
+</body>
+</html>
