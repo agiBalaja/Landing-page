@@ -1,0 +1,746 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>CSV ke Excel Converter | Preview & Unduh</title>
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- SheetJS (XLSX) untuk generate file Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(145deg, #f4f7fc 0%, #e8eef4 100%);
+            min-height: 100vh;
+            padding: 2rem 1.5rem;
+            color: #1a2c3e;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1f6e43, #2c9c6e);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.3px;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header h1 i {
+            background: none;
+            color: #2c9c6e;
+            font-size: 2rem;
+        }
+
+        .sub {
+            color: #4b6f8c;
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+
+        /* Card */
+        .card {
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(2px);
+            border-radius: 32px;
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.02);
+            padding: 1.8rem 2rem;
+            margin-bottom: 2rem;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        .upload-area {
+            border: 2px dashed #b9d4e6;
+            border-radius: 28px;
+            background: #fefefe;
+            padding: 2.2rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .upload-area:hover {
+            border-color: #2c9c6e;
+            background: #fafff7;
+        }
+
+        .upload-area i {
+            font-size: 3rem;
+            color: #569d7a;
+            margin-bottom: 12px;
+        }
+
+        .upload-area p {
+            font-size: 1rem;
+            margin: 8px 0;
+        }
+
+        .file-info {
+            background: #eef3fa;
+            border-radius: 60px;
+            padding: 8px 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        /* separator & options */
+        .options-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 24px;
+            gap: 15px;
+        }
+
+        .delimiter-group {
+            background: #f1f5f9;
+            padding: 8px 18px;
+            border-radius: 48px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .delimiter-group label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+            gap: 12px;
+        }
+
+        .preview-header h3 {
+            font-weight: 600;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge {
+            background: #1f6e43;
+            color: white;
+            border-radius: 40px;
+            padding: 6px 16px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 24px;
+            border: 1px solid #dce5ec;
+            background: white;
+            max-height: 500px;
+            overflow-y: auto;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.02);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            font-family: 'Inter', monospace;
+        }
+
+        th {
+            background: #eef2f6;
+            position: sticky;
+            top: 0;
+            padding: 12px 12px;
+            font-weight: 600;
+            color: #1f3b4c;
+            border-bottom: 1px solid #cddae4;
+            text-align: left;
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e9edf2;
+            color: #1f2f3a;
+        }
+
+        tr:hover td {
+            background-color: #f8fbfe;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 28px;
+            justify-content: center;
+        }
+
+        .btn {
+            border: none;
+            padding: 12px 28px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .btn-primary {
+            background: #1f6e43;
+            color: white;
+            box-shadow: 0 8px 18px -6px #1f6e4380;
+        }
+
+        .btn-primary:hover {
+            background: #0f5536;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #eef2f8;
+            border: 1px solid #cbdde9;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .alert {
+            background: #fef7e0;
+            border-left: 6px solid #f3b33d;
+            padding: 12px 20px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            font-size: 0.75rem;
+            color: #6c8ba0;
+        }
+
+        @media (max-width: 680px) {
+            body {
+                padding: 1rem;
+            }
+            .card {
+                padding: 1.2rem;
+            }
+            .options-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .delimiter-group {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1><i class="fas fa-file-csv"></i> CSV to Excel Konverter <i class="fas fa-file-excel"></i></h1>
+        <p class="sub">Unggah file CSV, pratinjau data, lalu konversi ke format Excel (.xlsx)</p>
+    </div>
+
+    <div class="card">
+        <div class="upload-area" id="uploadArea">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <p><strong>Klik atau seret file CSV</strong> ke area ini</p>
+            <p style="font-size: 0.8rem; color: #5f7f9a;">Maks 5MB, support delimiter koma/ titik koma/ tab</p>
+            <input type="file" id="fileInput" accept=".csv, .text/csv, .txt">
+            <div id="fileNameDisplay" class="file-info" style="display: none;">
+                <i class="fas fa-file-csv"></i> <span id="fileNameSpan"></span>
+                <i class="fas fa-times-circle" id="clearFileBtn" style="cursor:pointer; color:#b91c1c;"></i>
+            </div>
+        </div>
+
+        <div class="options-bar">
+            <div class="delimiter-group">
+                <span style="font-weight: 500;"><i class=""></i></span>
+                <label><input type="radio" name="delimiter" value="," checked>(,)</label>
+                <label><input type="radio" name="delimiter" value=";">(;)</label>
+                <label><input type="radio" name="delimiter" value="\t"> Tab</label>
+                <label><input type="radio" name="delimiter" value="custom"> <input type="text" id="customDelimiter" placeholder="karakter" maxlength="2" style="width: 60px; padding: 4px 8px; border-radius: 20px; border:1px solid #ccc;"></label>
+            </div>
+            <div style="font-size: 0.85rem; background:#eef3fa; padding: 4px 16px; border-radius: 30px;">
+                <i class="fas fa-info-circle"></i> Preview maks. 1000 baris
+            </div>
+        </div>
+
+        <div id="alertMessage" class="alert" style="display: none;"></div>
+    </div>
+
+    <!-- Preview Section -->
+    <div class="card" id="previewCard" style="display: none;">
+        <div class="preview-header">
+            <h3><i class="fas fa-table"></i> Pratinjau Data <span class="badge" id="rowCountBadge">0 baris</span></h3>
+            <span style="font-size: 0.8rem;"><i class="fas fa-eye"></i> 10 baris pertama / semua kolom</span>
+        </div>
+        <div class="table-wrapper" id="previewTableWrapper">
+            <table id="previewTable">
+                <thead id="previewHead"><tr><th>#</th></tr></thead>
+                <tbody id="previewBody"><tr><td>Belum ada data</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="btn-group" id="actionButtons" style="display: none;">
+        <button class="btn btn-primary" id="convertBtn"><i class="fas fa-file-excel"></i> Konversi ke Excel & Unduh</button>
+        <button class="btn btn-secondary" id="resetBtn"><i class="fas fa-sync-alt"></i> Hapus & Upload Ulang</button>
+    </div>
+    <footer>
+        <i class="fas fa-shield-alt"></i> Data diproses secara lokal di browser Anda. Tidak ada pengiriman ke server.
+    </footer>
+</div>
+
+<script>
+    (function(){
+        // DOM elements
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
+        const fileNameSpan = document.getElementById('fileNameSpan');
+        const clearFileBtn = document.getElementById('clearFileBtn');
+        const previewCard = document.getElementById('previewCard');
+        const alertMessageDiv = document.getElementById('alertMessage');
+        const actionButtons = document.getElementById('actionButtons');
+        const convertBtn = document.getElementById('convertBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const previewHead = document.getElementById('previewHead');
+        const previewBody = document.getElementById('previewBody');
+        const rowCountBadge = document.getElementById('rowCountBadge');
+        
+        // delimiter radio
+        const delimiterRadios = document.querySelectorAll('input[name="delimiter"]');
+        const customDelimInput = document.getElementById('customDelimiter');
+
+        // state
+        let currentCSVData = null;         // menyimpan array 2D (semua baris)
+        let currentHeaders = [];
+        let fullRowsCount = 0;
+        let parsedRawData = [];              // untuk konversi full ke excel
+
+        // helper show alert (info/error)
+        function showAlert(message, isError = true) {
+            alertMessageDiv.style.display = 'block';
+            alertMessageDiv.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${message}`;
+            if(!isError) alertMessageDiv.style.background = "#e0f2e9";
+            else alertMessageDiv.style.background = "#fef7e0";
+            setTimeout(() => {
+                if(alertMessageDiv.style.display === 'block') {
+                    alertMessageDiv.style.opacity = '0.9';
+                }
+            }, 10);
+        }
+
+        function hideAlert() {
+            alertMessageDiv.style.display = 'none';
+        }
+
+        function clearPreviewAndData() {
+            currentCSVData = null;
+            currentHeaders = [];
+            fullRowsCount = 0;
+            parsedRawData = [];
+            previewCard.style.display = 'none';
+            actionButtons.style.display = 'none';
+            hideAlert();
+            // reset tabel preview
+            previewHead.innerHTML = '<tr><th>#</th></tr>';
+            previewBody.innerHTML = '<tr><td>Tidak ada data</td></tr>';
+            rowCountBadge.innerText = '0 baris';
+        }
+
+        // fungsi parsing CSV berdasarkan delimiter yang dipilih
+        function getSelectedDelimiter() {
+            let selectedVal = null;
+            for(let radio of delimiterRadios) {
+                if(radio.checked) {
+                    if(radio.value === 'custom') {
+                        let custom = customDelimInput.value.trim();
+                        if(custom === "") {
+                            showAlert("Masukkan karakter pemisah kustom (misal: | atau ,)", true);
+                            return null;
+                        }
+                        selectedVal = custom;
+                    } else {
+                        selectedVal = radio.value === '\\t' ? '\t' : radio.value;
+                    }
+                    break;
+                }
+            }
+            return selectedVal;
+        }
+
+        // parse CSV text menjadi array 2D dengan delimiter dinamis, handling kutip
+        function parseCSV(csvText, delimiter) {
+            // regex sederhana untuk parsing CSV dengan dukungan kutip (")
+            // menggunakan pendekatan robust: iterate per karakter
+            const rows = [];
+            let currentRow = [];
+            let currentField = '';
+            let inQuotes = false;
+            let i = 0;
+            const n = csvText.length;
+            let rowCount = 0;
+            
+            while (i < n) {
+                const ch = csvText[i];
+                if (inQuotes) {
+                    if (ch === '"') {
+                        // cek apakah escape double quote
+                        if (i+1 < n && csvText[i+1] === '"') {
+                            currentField += '"';
+                            i++;
+                        } else {
+                            inQuotes = false;
+                        }
+                    } else {
+                        currentField += ch;
+                    }
+                    i++;
+                } else {
+                    if (ch === delimiter) {
+                        // selesai satu field
+                        currentRow.push(currentField);
+                        currentField = '';
+                        i++;
+                    } else if (ch === '\n') {
+                        // baris baru
+                        currentRow.push(currentField);
+                        rows.push(currentRow);
+                        currentRow = [];
+                        currentField = '';
+                        i++;
+                        rowCount++;
+                        // batasi maks 100k baris agar tidak crash
+                        if(rowCount > 200000) break;
+                    } else if (ch === '\r') {
+                        // abaikan carriage return, lompat
+                        i++;
+                        if(i < n && csvText[i] === '\n') i++;
+                        // tetap push jika field sudah ada dan baris kosong?
+                        if(currentField !== '' || currentRow.length>0) {
+                            currentRow.push(currentField);
+                            rows.push(currentRow);
+                            currentRow = [];
+                            currentField = '';
+                        } else {
+                            // baris kosong
+                            if(currentRow.length === 0 && currentField === '') {
+                                rows.push([]);
+                            } else {
+                                currentRow.push(currentField);
+                                rows.push(currentRow);
+                                currentRow = [];
+                                currentField = '';
+                            }
+                        }
+                    } else if (ch === '"') {
+                        inQuotes = true;
+                        i++;
+                    } else {
+                        currentField += ch;
+                        i++;
+                    }
+                }
+            }
+            // push field terakhir jika ada
+            if (currentField !== '' || currentRow.length > 0) {
+                currentRow.push(currentField);
+                rows.push(currentRow);
+            } else if (currentField === '' && currentRow.length===0 && csvText.length>0 && (csvText.endsWith('\n')===false)){
+                // kosong tidak ditambah
+            }
+            
+            // hapus baris terakhir jika semua field kosong (opsional)
+            if(rows.length>0 && rows[rows.length-1].length === 1 && rows[rows.length-1][0] === '') rows.pop();
+            
+            return rows;
+        }
+        
+        // generate preview dari data (10 baris pertama)
+        function renderPreview(parsedRows, headerRow, totalRows) {
+            if(!parsedRows || parsedRows.length === 0) {
+                previewCard.style.display = 'none';
+                return;
+            }
+            // jika header tidak ada, gunakan baris pertama sebagai header jika user pilih? kita gunakan baris pertama sebagai header selalu (CSV standar)
+            // asumsi header = baris pertama
+            let headers = headerRow || [];
+            let dataRows = parsedRows.slice(1); // data tanpa header
+            if(headers.length === 0 && parsedRows.length>0) {
+                headers = parsedRows[0].map((_,idx)=>`Kolom_${idx+1}`);
+                dataRows = parsedRows.slice(1);
+            }
+            // preview hanya 10 baris data + header
+            const previewDataRows = dataRows.slice(0, 10);
+            // buat tabel
+            const theadRow = document.createElement('tr');
+            theadRow.innerHTML = `<th style="position:sticky; left:0; background:#eef2f6;">#</th>` + headers.map(h => `<th>${escapeHtml(String(h))}</th>`).join('');
+            previewHead.innerHTML = '';
+            previewHead.appendChild(theadRow);
+            
+            const tbody = document.createDocumentFragment();
+            for(let idx=0; idx<previewDataRows.length; idx++) {
+                const row = previewDataRows[idx];
+                const tr = document.createElement('tr');
+                const tdIndex = document.createElement('td');
+                tdIndex.textContent = idx+1;
+                tdIndex.style.fontWeight = '500';
+                tdIndex.style.backgroundColor = '#f8fafc';
+                tdIndex.style.position = 'sticky';
+                tdIndex.style.left = '0';
+                tdIndex.style.background = '#f8fafc';
+                tr.appendChild(tdIndex);
+                for(let c=0; c<headers.length; c++) {
+                    const td = document.createElement('td');
+                    let cellValue = (c < row.length) ? row[c] : '';
+                    td.textContent = cellValue === undefined ? '' : String(cellValue);
+                    tr.appendChild(td);
+                }
+                tbody.appendChild(tr);
+            }
+            if(previewDataRows.length === 0 && dataRows.length>0){
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="${headers.length+1}" style="text-align:center;">Tidak ada data selain header</td>`;
+                tbody.appendChild(tr);
+            } else if (dataRows.length === 0){
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="${headers.length+1}" style="text-align:center;">File hanya berisi header atau kosong</td>`;
+                tbody.appendChild(tr);
+            }
+            previewBody.innerHTML = '';
+            previewBody.appendChild(tbody);
+            rowCountBadge.innerText = `${totalRows-1} baris data | ${headers.length} kolom`;
+            previewCard.style.display = 'block';
+        }
+        
+        // escape HTML untuk keamanan
+        function escapeHtml(str) {
+            return str.replace(/[&<>]/g, function(m) {
+                if(m === '&') return '&amp;';
+                if(m === '<') return '&lt;';
+                if(m === '>') return '&gt;';
+                return m;
+            }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+                return c;
+            });
+        }
+        
+        // Proses file CSV
+        function processFile(file) {
+            if(!file){
+                clearPreviewAndData();
+                return;
+            }
+            if(file.size > 5 * 1024 * 1024) {
+                showAlert("Ukuran file melebihi 5 MB. Silakan pilih file yang lebih kecil.", true);
+                clearPreviewAndData();
+                return;
+            }
+            const delimiter = getSelectedDelimiter();
+            if(delimiter === null) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const csvText = e.target.result;
+                // parse sesuai delimiter
+                let parsedRows = parseCSV(csvText, delimiter);
+                if(parsedRows.length === 0){
+                    showAlert("File CSV kosong atau tidak dapat diparse dengan delimiter yang dipilih.", true);
+                    clearPreviewAndData();
+                    return;
+                }
+                // pastikan tiap baris panjangnya seragam (pad dengan empty string)
+                const maxCols = parsedRows.reduce((max,row)=> Math.max(max, row.length), 0);
+                const uniformRows = parsedRows.map(row => {
+                    while(row.length < maxCols) row.push('');
+                    return row;
+                });
+                // simpan full data (termasuk header baris pertama)
+                parsedRawData = uniformRows;
+                fullRowsCount = uniformRows.length;
+                let headers = (uniformRows.length>0) ? uniformRows[0] : [];
+                currentHeaders = headers;
+                // render preview
+                renderPreview(uniformRows, headers, uniformRows.length);
+                actionButtons.style.display = 'flex';
+                hideAlert();
+                // beri pesan sukses
+                showAlert(`Berhasil memproses ${fullRowsCount-1} baris data (${headers.length} kolom). Siap dikonversi.`, false);
+                setTimeout(()=>hideAlert(), 2800);
+            };
+            reader.onerror = function() {
+                showAlert("Gagal membaca file. Coba lagi.", true);
+                clearPreviewAndData();
+            };
+            reader.readAsText(file, "UTF-8");
+        }
+        
+        // handler upload menggunakan area atau input
+        function triggerUpload() {
+            fileInput.click();
+        }
+        
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if(file){
+                fileNameSpan.innerText = file.name;
+                fileNameDisplay.style.display = 'inline-flex';
+                currentCSVData = file;
+                processFile(file);
+            } else {
+                fileNameDisplay.style.display = 'none';
+                clearPreviewAndData();
+            }
+        });
+        
+        uploadArea.addEventListener('click', (e) => {
+            if(e.target === clearFileBtn || clearFileBtn.contains(e.target)) return;
+            triggerUpload();
+        });
+        
+        clearFileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fileInput.value = '';
+            fileNameDisplay.style.display = 'none';
+            clearPreviewAndData();
+            actionButtons.style.display = 'none';
+            previewCard.style.display = 'none';
+            hideAlert();
+        });
+        
+        // ketika delimiter berubah, jika sudah ada file, ulangi proses
+        function onDelimiterChange() {
+            if(fileInput.files && fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                processFile(file);
+            }
+        }
+        delimiterRadios.forEach(radio => radio.addEventListener('change', onDelimiterChange));
+        customDelimInput.addEventListener('input', function(){
+            const customRadio = document.querySelector('input[name="delimiter"][value="custom"]');
+            if(customRadio.checked) onDelimiterChange();
+        });
+        
+        resetBtn.addEventListener('click', () => {
+            fileInput.value = '';
+            fileNameDisplay.style.display = 'none';
+            clearPreviewAndData();
+            actionButtons.style.display = 'none';
+            hideAlert();
+        });
+        
+        // konversi ke Excel menggunakan SheetJS dari parsedRawData
+        convertBtn.addEventListener('click', () => {
+            if(!parsedRawData || parsedRawData.length === 0) {
+                showAlert("Tidak ada data yang dapat dikonversi. Upload file CSV terlebih dahulu.", true);
+                return;
+            }
+            // Konversi array 2D ke worksheet SheetJS
+            const wsData = [...parsedRawData];  // semua baris asli termasuk header
+            const worksheet = XLSX.utils.aoa_to_sheet(wsData);
+            // opsi lebar kolom otomatis (optional)
+            worksheet['!cols'] = [];
+            if(currentHeaders && currentHeaders.length){
+                for(let i=0;i<currentHeaders.length;i++) worksheet['!cols'].push({wch: Math.min(25, (currentHeaders[i]||'').length+5)});
+            }
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Data_CSV");
+            // generate file excel dan unduh
+            const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([excelBuffer], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+            const link = document.createElement('a');
+            const originalName = fileInput.files[0] ? fileInput.files[0].name.replace(/\.csv$/i, '') : 'data_csv';
+            const filename = `${originalName}_konversi.xlsx`;
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+            showAlert(`File Excel "${filename}" berhasil diunduh!`, false);
+            setTimeout(()=>hideAlert(), 2000);
+        });
+        
+        // drag & drop area sederhana
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#2c9c6e';
+            uploadArea.style.background = '#f0faf3';
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = '#b9d4e6';
+            uploadArea.style.background = '#fefefe';
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#b9d4e6';
+            uploadArea.style.background = '#fefefe';
+            const files = e.dataTransfer.files;
+            if(files.length > 0 && files[0].type.includes('csv') || files[0].name.endsWith('.csv')) {
+                fileInput.files = files;
+                fileNameSpan.innerText = files[0].name;
+                fileNameDisplay.style.display = 'inline-flex';
+                processFile(files[0]);
+            } else {
+                showAlert("Harap drop file CSV (.csv)", true);
+            }
+        });
+    })();
+</script>
+</body>
+</html>
+```
