@@ -6,11 +6,12 @@ function buatTombolKembali() {
     // Cek apakah kita di halaman index (root)
     const isIndexPage = currentPath === '/' || 
                         currentPath === '/index.html' || 
-                        currentPath === '/nama-repo/' || // untuk GitHub Pages subfolder
+                        currentPath === '/nama-repo/' ||
                         currentPath === '/nama-repo/index.html';
     
     // Jika sudah di index, tombol tidak perlu muncul
     if (isIndexPage) {
+        console.log('Di halaman index, tombol disembunyikan');
         return;
     }
 
@@ -45,9 +46,9 @@ function buatTombolKembali() {
         this.style.backgroundColor = '#0366d6';
     };
 
-    // 🔥 FUNGSI KHUSUS UNTUK STRUKTUR ANDA
+    // 🔥 FUNGSI KHUSUS UNTUK STRUKTUR FOLDER ANDA
     tombol.onclick = function() {
-        // Deteksi apakah kita di subfolder atau root
+        // Deteksi posisi folder
         const pathSegments = window.location.pathname.split('/').filter(p => p);
         
         if (pathSegments.length === 0) {
@@ -55,15 +56,25 @@ function buatTombolKembali() {
             window.location.href = '/';
         } else if (pathSegments[0] === 'nama-repo') {
             // Di GitHub Pages dengan subfolder
-            window.location.href = '/nama-repo/';
+            if (pathSegments.length === 1) {
+                // Di root repo
+                window.location.href = '/nama-repo/';
+            } else {
+                // Di dalam folder (about/, contact/, dll)
+                window.location.href = '/nama-repo/';
+            }
         } else {
-            // Di subfolder lain, naik ke root
-            window.location.href = '/';
+            // Di subfolder (about/, contact/, dll)
+            // Naik ke root dengan jumlah folder
+            const level = pathSegments.length;
+            let backPath = '../'.repeat(level);
+            window.location.href = backPath;
         }
     };
 
     // Tambahkan tombol ke halaman
     document.body.appendChild(tombol);
+    console.log('Tombol kembali berhasil ditambahkan');
 }
 
 // Jalankan saat halaman selesai dimuat
