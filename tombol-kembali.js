@@ -6,8 +6,8 @@ function buatTombolKembali() {
     // Cek apakah kita di halaman index (root)
     const isIndexPage = currentPath === '/' || 
                         currentPath === '/index.html' || 
-                        currentPath === '/nama-repo/' ||
-                        currentPath === '/nama-repo/index.html';
+                        currentPath === '/Landing-page/' ||
+                        currentPath === '/Landing-page/index.html';
     
     // Jika sudah di index, tombol tidak perlu muncul
     if (isIndexPage) {
@@ -46,7 +46,7 @@ function buatTombolKembali() {
         this.style.backgroundColor = '#0366d6';
     };
 
-    // 🔥 FUNGSI KHUSUS UNTUK STRUKTUR FOLDER ANDA
+    // 🔥 Aksi kembali ke index dengan path yang benar
     tombol.onclick = function() {
         // Deteksi posisi folder
         const pathSegments = window.location.pathname.split('/').filter(p => p);
@@ -54,14 +54,14 @@ function buatTombolKembali() {
         if (pathSegments.length === 0) {
             // Di root
             window.location.href = '/';
-        } else if (pathSegments[0] === 'nama-repo') {
-            // Di GitHub Pages dengan subfolder
+        } else if (pathSegments[0] === 'Landing-page') {
+            // Di GitHub Pages dengan subfolder Landing-page
             if (pathSegments.length === 1) {
                 // Di root repo
-                window.location.href = '/nama-repo/';
+                window.location.href = '/Landing-page/';
             } else {
                 // Di dalam folder (about/, contact/, dll)
-                window.location.href = '/nama-repo/';
+                window.location.href = '/Landing-page/';
             }
         } else {
             // Di subfolder (about/, contact/, dll)
