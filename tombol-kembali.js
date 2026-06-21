@@ -6,8 +6,8 @@ function buatTombolKembali() {
     // Cek apakah kita di halaman index (root)
     const isIndexPage = currentPath === '/' || 
                         currentPath === '/index.html' || 
-                        currentPath === '/nama-repo/' || // untuk GitHub Pages subfolder
-                        currentPath === '/nama-repo/index.html';
+                        currentPath === '/Landing-page/' || // untuk GitHub Pages subfolder
+                        currentPath === '/Landing-page/index.html';
     
     // Jika sudah di index, tombol tidak perlu muncul
     if (isIndexPage) {
