@@ -17,7 +17,7 @@ function buatTombolKembali() {
     tombol.style.zIndex = '9999';
     
     tombol.onclick = function() {
-        window.location.href = '/';
+        window.location.href = 'https://agibalaja.github.io/Landing-page/';
     };
     
     document.body.appendChild(tombol);
