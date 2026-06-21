@@ -55,7 +55,7 @@ function buatTombolKembali() {
             window.location.href = '/';
         } else if (pathSegments[0] === 'nama-repo') {
             // Di GitHub Pages dengan subfolder
-            window.location.href = '/nama-repo/';
+            window.location.href = '/Landing-page/';
         } else {
             // Di subfolder lain, naik ke root
             window.location.href = '/';
