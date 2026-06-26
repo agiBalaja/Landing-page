@@ -186,6 +186,12 @@
         margin-top: 10px;
         display: block;
     }
+    
+    .file-upload-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
 </style>
 </head>
 <body>
@@ -198,55 +204,15 @@
 
     <div class="row">
         <div class="col">
-            <label>Jumlah Baris Data</label>
-            <input type="number" id="jumlahBaris" value="10" min="1">
-        </div>
-
-        <div class="col">
             <label>Tempat / Lokasi</label>
             <input type="text" id="inputTempat" placeholder="Contoh: Pelepat Ilir" oninput="updatePreview()">
         </div>
 		
 		<div class="col">
-    <label>Tanggal Surat</label>
-    <input type="date" id="inputTanggal" onchange="updatePreview()">
-</div>
-    </div>
-
-    <div class="row">
-        <div class="col">
-            <label>Jumlah Kolom Bulan</label>
-            <select id="jmlBulan" onchange="updateTableStructure()">
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3" selected>3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-                <option value="6">6</option>
-            </select>
-        </div>
-
-        <div class="col">
-            <label>Buat Tabel</label>
-            <button onclick="generateEmptyRows()" class="btn-pdf">
-                GENERATE TABEL
-            </button>
+            <label>Tanggal Surat</label>
+            <input type="date" id="inputTanggal" onchange="updatePreview()">
         </div>
     </div>
-	
-	<div class="row">
-    <div class="col">
-        <label>Input Nama Kolektif (Pisahkan Dengan Koma)</label>
-        <input type="text" id="inputNamaMassal"
-        placeholder="ANI, BUDI, CICI">
-    </div>
-
-    <div class="col">
-        <label>Input NIK Kolektif (Pisahkan Dengan Koma)</label>
-        <input type="text" id="inputNikMassal"
-        placeholder="1601xxxx,1602xxxx,1603xxxx">
-    </div>
-</div>
 
     <div class="row">
         <div class="col">
@@ -262,17 +228,20 @@
 
     <div class="row">
         <div class="col">
-            <label>Nama Bulan (Pisahkan Koma)</label>
-            <input type="text" id="inputBulan" value="JANUARI, FEBRUARI, MARET" oninput="updateTableStructure()">
-        </div>
-
-        <div class="col">
-            <label>Jumlah Bulan</label>
-            <select id="jmlBulan" onchange="updateTableStructure()">
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3" selected>3</option>
+            <label>Periode Triwulan</label>
+            <select id="selectTriwulan" onchange="updateTableStructure(); updatePreview()">
+                <option value="1" selected>Triwulan 1 (Januari - Maret)</option>
+                <option value="2">Triwulan 2 (April - Juni)</option>
+                <option value="3">Triwulan 3 (Juli - September)</option>
+                <option value="4">Triwulan 4 (Oktober - Desember)</option>
             </select>
+        </div>
+        
+        <div class="col">
+            <label>Upload Excel Data KPM (Kol A: NAMA, Kol B: NIK)</label>
+            <div class="file-upload-wrapper">
+                <input type="file" id="uploadExcel" accept=".xlsx, .xls" onchange="handleExcelUpload(event)">
+            </div>
         </div>
     </div>
 
@@ -328,35 +297,31 @@
 <script>
 
 let rawData = [];
+const jmlBulan = 3; // Triwulan selalu 3 bulan
 
 function getFormattedDate() {
-
     const inputDate = document.getElementById('inputTanggal').value;
-
     let d = inputDate ? new Date(inputDate) : new Date();
 
     const bln = [
-        "Januari",
-        "Februari",
-        "Maret",
-        "April",
-        "Mei",
-        "Juni",
-        "Juli",
-        "Agustus",
-        "September",
-        "Oktober",
-        "November",
-        "Desember"
+        "Januari", "Februari", "Maret", "April", "Mei", "Juni", 
+        "Juli", "Agustus", "September", "Oktober", "November", "Desember"
     ];
 
     return `${d.getDate()} ${bln[d.getMonth()]} ${d.getFullYear()}`;
 }
 
+function getBulanTriwulan() {
+    const tw = document.getElementById('selectTriwulan').value;
+    if (tw === "1") return ["JANUARI", "FEBRUARI", "MARET"];
+    if (tw === "2") return ["APRIL", "MEI", "JUNI"];
+    if (tw === "3") return ["JULI", "AGUSTUS", "SEPTEMBER"];
+    if (tw === "4") return ["OKTOBER", "NOVEMBER", "DESEMBER"];
+    return ["BULAN 1", "BULAN 2", "BULAN 3"];
+}
+
 function updatePreview() {
-
     const tpt = document.getElementById('inputTempat').value || "........";
-
     document.getElementById('prevTgl').innerText = `${tpt}, ${getFormattedDate()}`;
 
     document.getElementById('prevNama').innerText =
@@ -365,18 +330,12 @@ function updatePreview() {
     document.getElementById('prevNip').innerText =
         document.getElementById('inputNipPnd').value || "....................";
 
-    document.getElementById('periodeView').innerText =
-        document.getElementById('inputBulan').value;
+    const blnArr = getBulanTriwulan();
+    document.getElementById('periodeView').innerText = `${blnArr[0]} - ${blnArr[2]}`;
 }
 
 function updateTableStructure() {
-
-    const jml = parseInt(document.getElementById('jmlBulan').value);
-
-    const blnArr = document.getElementById('inputBulan').value
-        .split(',')
-        .map(s => s.trim());
-
+    const blnArr = getBulanTriwulan();
     const head = document.getElementById('tableHead');
 
     let h1 = `
@@ -388,8 +347,8 @@ function updateTableStructure() {
         <th rowspan="2" class="col-faskes">NAMA FASKES</th>
     `;
 
-    for(let i = 0; i < jml; i++) {
-        h1 += `<th colspan="2">${(blnArr[i] || 'BULAN').toUpperCase()}</th>`;
+    for(let i = 0; i < jmlBulan; i++) {
+        h1 += `<th colspan="2">${blnArr[i]}</th>`;
     }
 
     h1 += `
@@ -401,7 +360,7 @@ function updateTableStructure() {
 
     let h2 = `<tr>`;
 
-    for(let i = 0; i < jml; i++) {
+    for(let i = 0; i < jmlBulan; i++) {
         h2 += `
             <th>HADIR</th>
             <th>TIDAK</th>
@@ -414,71 +373,83 @@ function updateTableStructure() {
 
     if(rawData.length > 0) {
         renderTable(rawData);
+    } else {
+        generateEmptyRows(5); // Default 5 baris kosong jika belum ada data excel
     }
 }
 
+function handleExcelUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
 
-function generateEmptyRows() {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, {type: 'array'});
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        
+        // Convert ke JSON berformat array of arrays
+        const json = XLSX.utils.sheet_to_json(worksheet, {header: 1}); 
 
-    const jumlah = parseInt(document.getElementById('jumlahBaris').value) || 10;
+        rawData = [];
+        let rowIndex = 1;
 
-    const namaMassal = document.getElementById('inputNamaMassal').value
-        .split(',')
-        .map(x => x.trim());
+        // Mulai dari i=1 untuk melewati baris pertama (asumsi Header)
+        for (let i = 1; i < json.length; i++) {
+            let row = json[i];
+            
+            // Lewati baris kosong
+            if (!row || row.length === 0) continue; 
+            
+            let nama = row[0] ? String(row[0]).trim() : '';
+            let nik = row[1] ? String(row[1]).trim() : '';
+            
+            if(nama === '' && nik === '') continue; // Abaikan jika keduanya kosong
 
-    const nikMassal = document.getElementById('inputNikMassal').value
-        .split(',')
-        .map(x => x.trim());
+            let umur = hitungUmurDariNIK(nik);
 
+            rawData.push([
+                rowIndex, nama, nik, umur, '', '', '', '', '', '', '', '', '', '', ''
+            ]);
+            rowIndex++;
+        }
+
+        if(rawData.length === 0) {
+            alert("Data tidak ditemukan atau format tidak sesuai. Pastikan data dimulai dari baris ke-2.");
+            generateEmptyRows(5);
+        } else {
+            renderTable(rawData);
+        }
+        
+        // Reset input file agar bisa upload file yang sama lagi jika diedit
+        event.target.value = '';
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function generateEmptyRows(jumlah) {
     rawData = [];
-
     for(let i = 1; i <= jumlah; i++) {
-
-        const nama = namaMassal[i - 1] || '';
-        const nik = nikMassal[i - 1] || '';
-
-        rawData.push([
-            i,
-            nama,
-            nik,
-            hitungUmurDariNIK(nik),
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            ''
-        ]);
+        rawData.push([ i, '', '', '', '', '', '', '', '', '', '', '', '', '', '' ]);
     }
-
     renderTable(rawData);
 }
 
 function hitungUmurDariNIK(nik) {
-
     nik = String(nik).replace(/\D/g, '');
-
     if(nik.length < 12) return '';
 
     let tgl = parseInt(nik.substring(6,8));
     let bln = parseInt(nik.substring(8,10));
     let thn = parseInt(nik.substring(10,12));
 
-    if(tgl > 40) {
-        tgl -= 40;
-    }
+    if(tgl > 40) tgl -= 40;
 
     const tahunSekarang = new Date().getFullYear() % 100;
-
     let tahunLahir = thn <= tahunSekarang ? 2000 + thn : 1900 + thn;
 
     const today = new Date();
-
     let umur = today.getFullYear() - tahunLahir;
 
     const bulanNow = today.getMonth() + 1;
@@ -492,42 +463,36 @@ function hitungUmurDariNIK(nik) {
 }
 
 function renderTable(rows) {
-
     const body = document.getElementById('tableBody');
-
-    const jmlBulan = parseInt(document.getElementById('jmlBulan').value);
-
     body.innerHTML = "";
 
-    rows.forEach(row => {
-
+    rows.forEach((row, index) => {
         const tr = document.createElement('tr');
 
         [0,1,2,3,4].forEach(i => {
-
             const td = document.createElement('td');
-
             td.contentEditable = true;
-
             td.textContent = row[i] || "";
 
             if(i === 1) td.classList.add('col-nama');
-            if(i === 2) td.classList.add('col-nik');
-
+            if(i === 2) {
+                td.classList.add('col-nik');
                 td.addEventListener('input', function() {
                     const nik = td.innerText.trim();
                     const umurCell = tr.children[3];
                     umurCell.innerText = hitungUmurDariNIK(nik);
+                    // Update rawData saat user mengetik manual
+                    rawData[index][2] = nik;
+                    rawData[index][3] = umurCell.innerText;
                 });
+            }
             if(i === 4) td.classList.add('col-faskes');
 
             tr.appendChild(td);
         });
 
         let start = 5;
-
         for(let i = 0; i < jmlBulan; i++) {
-
             const hadir = document.createElement('td');
             hadir.contentEditable = true;
             hadir.textContent = row[start] || "";
@@ -537,47 +502,30 @@ function renderTable(rows) {
             tidakHadir.contentEditable = true;
             tidakHadir.textContent = row[start + 1] || "";
             tr.appendChild(tidakHadir);
-
             start += 2;
         }
 
-        const tdPersen = document.createElement('td');
-        tdPersen.contentEditable = true;
-        tdPersen.textContent = row[11] || "";
-        tr.appendChild(tdPersen);
-
-        const tdDok = document.createElement('td');
-        tdDok.contentEditable = true;
-        tdDok.textContent = row[12] || "";
-        tr.appendChild(tdDok);
-
-        const tdKomit = document.createElement('td');
-        tdKomit.contentEditable = true;
-        tdKomit.textContent = row[13] || "";
-        tr.appendChild(tdKomit);
-
-        const tdPetugas = document.createElement('td');
-        tdPetugas.contentEditable = true;
-        tdPetugas.textContent = row[14] || "";
-        tr.appendChild(tdPetugas);
+        [11, 12, 13, 14].forEach(i => {
+            const td = document.createElement('td');
+            td.contentEditable = true;
+            td.textContent = row[i] || "";
+            tr.appendChild(td);
+        });
 
         body.appendChild(tr);
     });
 }
 
 function exportToPDF() {
-
     const { jsPDF } = window.jspdf;
-
     const doc = new jsPDF('l', 'mm', 'a4');
 
     const tgl = getFormattedDate();
-
     const tempat = document.getElementById('inputTempat').value || "........";
-
     const namaPnd = document.getElementById('inputNamaPnd').value || "....................";
-
     const nipPnd = document.getElementById('inputNipPnd').value || "....................";
+    const blnArr = getBulanTriwulan();
+    const periodeTeks = `${blnArr[0]} - ${blnArr[2]}`;
 
     doc.setFontSize(11)
        .setFont(undefined, 'bold')
@@ -587,17 +535,12 @@ function exportToPDF() {
        .setFont(undefined, 'normal');
 
     doc.text(`Jenis : Verifikasi Komitmen Faskes`, 14, 20);
-
-    doc.text(`Periode : ${document.getElementById('inputBulan').value}`, 14, 24);
+    doc.text(`Periode : ${periodeTeks}`, 14, 24);
 
     doc.autoTable({
-
         html: '#verkomTable',
-
         startY: 28,
-
         theme: 'grid',
-
         headStyles: {
             fillColor: [187, 222, 251],
             textColor: [0,0,0],
@@ -606,7 +549,6 @@ function exportToPDF() {
             halign: 'center',
             valign: 'middle'
         },
-
         styles: {
             fontSize: 11,
             cellPadding: 1,
@@ -615,25 +557,19 @@ function exportToPDF() {
             halign: 'center',
             valign: 'middle'
         },
-
-        margin: {
-            bottom: 50
-        }
+        margin: { bottom: 50 }
     });
 
     const totalPages = doc.internal.getNumberOfPages();
-
     doc.setPage(totalPages);
 
     let finalY = doc.lastAutoTable.finalY + 10;
-
     if(finalY > 165) {
         doc.addPage();
         finalY = 20;
     }
 
     doc.setFontSize(9);
-
     doc.text("Mengetahui,", 40, finalY + 5);
     doc.text("Pihak Faskes", 40, finalY + 10);
 
@@ -641,7 +577,6 @@ function exportToPDF() {
     doc.text("NIP. .....................................................", 40, finalY + 35);
 
     doc.text(`${tempat}, ${tgl}`, 210, finalY + 5);
-
     doc.text("ASN PPPK Kemensos RI", 210, finalY + 10);
 
     doc.setFont(undefined, 'bold')
@@ -655,11 +590,8 @@ function exportToPDF() {
 
 updateTableStructure();
 updatePreview();
-generateEmptyRows();
 
 </script>
-    <!-- Tambahkan tombol kembali -->
-    <script src="../tombol-kembali.js"></script>
+
 </body>
 </html>
-```
