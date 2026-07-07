@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PKH Task Companion - Dashboard Target</title>
+   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DV25BYV3TL"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-DV25BYV3TL');
+</script>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom Smooth Scroll & Active Effects */
+        .tap-highlight-none {
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* Glassmorphism subtle styles */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-20">
+
+    <!-- Header App -->
+    <header class="bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-lg sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-4 md:py-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-white/20 p-2 rounded-xl">
+                    <!-- App Icon (Briefcase/Task SVG) -->
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold tracking-tight">PKH Task Companion</h1>
+                    <p class="text-emerald-100 text-xs md:text-sm">Sistem Monitoring Tugas, Target & Manajemen Laporan PKH</p>
+                </div>
+            </div>
+            
+            <!-- Quick Progress Tracker -->
+            <div class="bg-white/10 px-4 py-2.5 rounded-2xl flex items-center gap-4 border border-white/10 w-full md:w-auto justify-between">
+                <div>
+                    <p class="text-xs text-emerald-100">Progress Tugas Saya</p>
+                    <div class="flex items-baseline gap-1.5">
+                        <span id="completed-count" class="text-lg font-bold">0</span>
+                        <span class="text-emerald-200 text-xs">dari</span>
+                        <span id="total-count" class="text-lg font-bold">17</span>
+                    </div>
+                </div>
+                <div class="w-24 bg-white/20 rounded-full h-2.5 relative overflow-hidden">
+                    <div id="progress-bar" class="bg-emerald-300 h-2.5 rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="max-w-6xl mx-auto px-4 mt-6">
+        
+        <!-- Action Control Panel -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80 mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
+            <!-- Search Input -->
+            <div class="relative w-full md:w-96">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </span>
+                <input type="text" id="searchInput" oninput="filterTasks()" placeholder="Cari kata kunci kegiatan atau target..." class="w-full pl-10 pr-10 py-2.5 bg-slate-50 text-slate-800 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all text-sm" />
+                <button id="clearSearch" onclick="clearSearchField()" class="hidden absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Quick Info/Filter Toast Trigger -->
+            <div class="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
+                <button onclick="resetChecklist()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-lg font-medium transition-colors inline-flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 12H19"></path>
+                    </svg> Reset Checklist
+                </button>
+                <div class="text-xs text-slate-500 bg-emerald-50 text-emerald-700 px-3 py-2 rounded-lg border border-emerald-100 font-medium">
+                    ðŸ’¡ Tip: Ketuk teks kegiatan untuk langsung menyalin teks tersebut.
+                </div>
+            </div>
+        </div>
+
+        <!-- Desktop & Mobile Table Wrapper -->
+        <div id="no-results" class="hidden bg-white rounded-2xl p-12 text-center border border-slate-200 shadow-sm">
+            <svg class="w-16 h-16 text-slate-300 mx-auto mb-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <p class="text-slate-500 font-medium text-lg">Pencarian tidak ditemukan</p>
+            <p class="text-slate-400 text-sm mt-1">Coba gunakan kata kunci lainnya.</p>
+        </div>
+
+        <!-- DESKTOP TABLE VIEW -->
+        <div class="hidden md:block overflow-hidden bg-white rounded-2xl shadow-sm border border-slate-200/80">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100 border-b border-slate-200 text-slate-700 text-xs font-semibold uppercase tracking-wider">
+                        <th class="py-4 px-4 text-center w-12">No</th>
+                        <th class="py-4 px-6">Uraian Kegiatan (Klik teks untuk Salin)</th>
+                        <th class="py-4 px-5 text-center w-40">Target Bulanan (Drive)</th>
+                        <th class="py-4 px-5 text-center w-48">Target Tahunan</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-sm" id="desktopTableBody">
+                    <!-- Rows will be animated/populated by data-attribute filters -->
+                    
+                    <!-- No 1 -->
+                    <tr class="hover:bg-slate-50/50 transition-colors duration-150 group">
+                        <td class="py-4 px-4 text-center font-bold text-slate-400 bg-slate-50/30 group-hover:bg-slate-50/80">1</td>
+                        <td class="py-4 px-6">
+                            <div class="flex flex-col gap-2">
+                                <div class="task-item flex items-start gap-2.5 p-2.5 rounded-lg border border-emerald-100/50 hover:border-emerald-200 bg-emerald-50/20 hover:bg-emerald-50/40 cursor-pointer transition-all duration-150 tap-highlight-none" data-id="1-1">
+                                    <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4 border-slate-300" onclick="toggleTask('1-1'); event.stopPropagation();">
+                                    <span class="task-text text-slate-700 font-medium select-all flex-1" onclick="copyText(this)">Melakukan edukasi dan sosialisasi pencairan secara tunai dan non tunai</span>
+                                </div>
+                                <div class="task-item flex items-start gap-2.5 p-2.5 rounded-lg border border-emerald-100/50 hover:border-emerald-200 bg-emerald-50/20 hover:bg-emerald-50/40 cursor-pointer transition-all duration-150 tap-highlight-none" data-id="1-2">
+                                    <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4 border-slate-300" onclick="toggleTask('1-2'); event.stopPropagation();">
+                                    <span class="task-text text-slate-700 font-medium select-all flex-1" onclick="copyText(this)">Melaksanakan Supervisi Permasalahan Bantuan Sosial</span>
+                                </div>
+                                <div class="task-item flex items-start gap-2.5 p-2.5 rounded-lg border border-emerald-100/50 hover:border-emerald-200 bg-emerald-50/20 hover:bg-emerald-50/40 cursor-pointer transition-all duration-150 tap-highlight-none" data-id="1-3">
+                                    <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4 border-slate-300" onclick="toggleTask('1-3'); event.stopPropagation();">
+                                    <span class="task-text text-slate-700 font-medium select-all flex-1" onclick="copyText(this)">Melaksanakan Monitoring/Pemantauan Penyaluran Bantuan Sosial</span>
+                                </div>
+                                <div class="task-item flex items-start gap-2.5 p-2.5 rounded-lg border border-emerald-100/50 hover:border-emerald-200 bg-emerald-50/20 hover:bg-emerald-50/40 cursor-pointer transition-all duration-150 tap-highlight-none" data-id="1-4">
+                                    <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4 border-slate-300" onclick="toggleTask('1-4'); event.stopPropagation();">
+                                    <span class="task-text text-slate-700 font-medium select-all flex-1" onclick="copyText(this)">Melaksanakan Penelitian penyaluran bantuan Sosial</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-4 px-5 text-center">
+                            <a href="https://drive.google.com/drive/folders/17junSfcfPuAU7dR5I9WnoAaoa2qLuSob" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold border border-blue-100 hover:border-blue-200 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+                                </svg>
+                                1 Laporan
+                            </a>
+                        </td>
+                        <td class="py-4 px-5 text-center">
+                            <span class="inline-block px-3 py-1 bg-amber-50 text-amber-800 border border-amber-100 font-semibold rounded-lg text-xs">12 Laporan</span>
+                        </td>
+                    </tr>
+
+                    <!-- No 2 -->
+                    <tr class="hover:bg-slate-50/50 transition-colors duration-150 group">
+                        <td class="py-4 px-4 text-center font-bold text-slate-400 bg-slate-50/30 group-hover:bg-slate-50/80">2</td>
+                        <td class="py-4 px-6">
+                            <div class="flex flex-col gap-2">
+                                <div class="task-item flex items-start gap-2.5 p-2.5 rounded-lg border border-emerald-100/50 hover:border-emerald-200 bg-emerald-50/20 hover:bg-emerald-50/40 cursor-pointer transition-all duration-150 tap-highlight-none" data-id="2-1">
+                                    <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4 border-slate-300" onclick="toggleTask('2-1'); event.stopPropagation();">
+                                    <span class="task-text text-slate-700 font-medium select-all flex-1" onclick="copyText(this)">Melaksanakan Pertemuan Peningkatan Kemampuan Keluarga (P2K2)</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-4 px-5 text-center">
+                            <a href="https://drive.google.com/drive/folders/1ctLjBOPQC-15VchyO0eJaUivMCjA9u6a" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold border border-blue-100 hover:border-blue-200 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+                                </svg>
+                                15 Laporan
+                            </a>
+                        </td>
+                        <td class="py-4 px-5 text-center">
+                            <span class="inline-block px-3 py-1 bg-amber-50 text-amber-800 border border-amber-100 font-semibold rounded-lg text-xs">180 Laporan</span>
+                        </td>
+                    </tr>
+
+                    <!-- No 3 -->
+                    <tr class="hover:bg-slate-50/50 transition-colors duration-150 group">
+                        <td class="py-4 px-4 text-center font-bold text-slate-400 bg-slate-50/30 group-hover:bg-slate-50/80">3</td>
+                        <td class="py-4 px-6">
+                            <div class="flex flex-col gap-2">
+                                <div class="task-item flex items-start gap-2.5 p-2.5 rounded-lg border border-emerald-100/50 hover:border-emerald-200 bg-emerald-50/20 hover:bg-emerald-50/40 cursor-pointer transition-all duration-150 tap-highlight-none" data-id="3-1">
+                                    <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4 border-slate-300" onclick="toggleTask('3-1'); event.stopPropagation();">
+                                    <span class="task-text text-slate-700 font-medium select-all flex-1" onclick="copyText(this)">Melaksanakan Verifikasi Komitmen Pendidikan, Kesehatan dan Kesejahteraan Sosial</span>
+                                </div>
+                                <div class="task-item flex items-start gap-2.5 p-2.5 rounded-lg border border-emerald-100/50 hover:border-emerald-200 bg-emerald-50/20 hover:bg-emerald-50/40 cursor-pointer transition-all duration-150 tap-highlight-none" data-id="3-2">
+                                    <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4 border-slate-300" onclick="toggleTask('3-2'); event.stopPropagation();">
+                                    <span class="task-text text-slate-700 font-medium select-all flex-1" onclick="copyText(this)">Melakukan pendampingan, mediasi, dan fasilitasi kepada KPM PKH dalam proses perubahan perilaku, pola pikir yang mandiri dan produktif</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-4 px-5 text-center">
+                            <a href="https://drive.google.com/drive/folders/1C_2jmSbKrV65WhxpNo8YSpXppD-oFFJ7" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold border border-blue-100 hover:border-blue-200 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+                                </svg>
+                                2 Laporan
+                            </a>
+                        </td>
+                        <td class="py-4 px-5 text-center">
+                            <span class="inline-block px-3 py-1 bg-amber-50 text-amber-800 border border-amber-100 font-semibold rounded-lg text-xs">24 Laporan</span>
+                        </td>
+                    </tr>
+
+                    <!-- No 4 -->
+                    <tr class="hover:bg-slate-50/50 transition-colors duration-150 group">
+                        <td class="py-4 px-4 text-center font-bold text-slate-400 bg-slate-50/30 group-hover:bg-slate-50/80">4</td>
+                        <td class="py-4 px-6">
+                            <div class="flex flex-col gap-2">
+                                <div class="task-item flex items-start gap-2.5 p-2.5 rounded-lg border border-emerald-100/50 hover:border-emerald-200 bg-emerald-50/20 hover:bg-emerald-50/40 cursor-pointer transition-all duration-150 tap-highlight-none" data-id="4-1">
+                                    <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4 border-slate-300" onclick="toggleTask('4-1'); event.stopPropagation();">
+                                    <span class="task-text text-slate-700 font-medium select-all flex-1" onclick="copyText(this)">Melakukan usulan KPM Graduasi mandiri dan Pemberdayaan PPSE</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-4 px-5 text-center">
+                            <a href="https://drive.google.com/drive/folders/1TYGOB8U72fsWm8Ny0EsJa7ng41s2ivAc" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold border border-blue-100 hover:border-blue-200 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+                                </svg>
+                                2 Laporan
+                            </a>
+                        </td>
+                        <td class="py-4 px-5 text-center">
+                            <span class="inline-block px-3 py-1 bg-amber-50 text-amber-800 border border-amber-100 font-semibold rounded-lg text-xs">24 Laporan (Graduasi_PPSE)</span>
+                        </td>
+                    </tr>
+
+                    <!-- No 5 -->
+                    <tr class="hover:bg-slate-50/50 transition-colors duration-150 group">
+                        <td class="py-4 px-4 text-center font-bold text-slate-400 bg-slate-50/30 group-hover:bg-slate-50/80">5</td>
+                        <td class="py-4 px-6">
+                            <div class="flex flex-col gap-2">
+                                <div class="task-item flex items-start gap-2.5 p-2.5 rounded-lg border border-emerald-100/50 hover:border-emerald-200 bg-emerald-50/20 hover:bg-emerald-50/40 cursor-pointer transition-all duration-150 tap-highlight-none" data-id="5-1">
+                                    <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4 border-slate-300" onclick="toggleTask('5-1'); event.stopPropagation();">
+                                    <span class="task-text text-slate-700 font-medium select-all flex-1" onclick="copyText(this)">Melaksanakan Pemutakhiran Data</span>
+                                </div>
+                                <div class="task-item flex items-start gap-2.5 p-2.5 rounded-lg border border-emerald-100/50 hover:border-emerald-200 bg-emerald-50/20 hover:bg-emerald-50/40 cursor-pointer transition-all duration-150 tap-highlight-none" data-id="5-2">
+                                    <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4 border-slate-300" onclick="toggleTask('5-2'); event.stopPropagation();">
+                                    <span class="task-text text-slate-700 font-medium select-all flex-1" onclick="copyText(this)">Melaksanakan proses bisnis PKH yang meliputi verifikasi validasi calon penerima bantuan sosial</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-4 px-5 text-center">
+                            <a href="https://drive.google.com/drive/folders/1HptEjPNLncvlGEhHEsthNUys4yXk5_h8" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold border border-blue-100 hover:border-blue-200 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+                                </svg>
+                                3 Laporan
+                            </a>
+                        </td>
+                        <td class="py-4 px-5 text-center">
+                            <span class="inline-block px-3 py-1 bg-amber-50 text-amber-800 border border-amber-100 font-semibold rounded-lg text-xs">36 Laporan</span>
+                        </td>
+                    </tr>
+
+                    <!-- No 6 -->
+                    <tr class="hover:bg-slate-50/50 transition-colors duration-150 group">
+                        <td class="py-4 px-4 text-center font-bold text-slate-400 bg-slate-50/30 group-hover:bg-slate-50/80">6</td>
+                        <td class="py-4 px-6">
+                            <div class="flex flex-col gap-2">
+                                <div class="task-item flex items-start gap-2.5 p-2.5 rounded-lg border border-emerald-100/50 hover:border-emerald-200 bg-emerald-50/20 hover:bg-emerald-50/40 cursor-pointer transition-all duration-150 tap-highlight-none" data-id="6-1">
+                                    <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4 border-slate-300" onclick="toggleTask('6-1'); event.stopPropagation();">
+                                    <span class="task-text text-slate-700 font-medium select-all flex-1" onclick="copyText(this)">Melaksanakan Respon Kasus/Pengaduan/kebencanaan/Kerentanan</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-4 px-5 text-center">
+                            <a href="https://drive.google.com/drive/folders/13pbT9BZ7STXRUlqjmn09a4AEboJHK8TE" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold border border-blue-100 hover:border-blue-200 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+                                </svg>
+                                1 Laporan
+                            </a>
+                        </td>
+                        <td class="py-4 px-5 text-center">
+                            <span class="inline-block px-3 py-1 bg-amber-50 text-amber-800 border border-amber-100 font-semibold rounded-lg text-xs">100%</span>
+                        </td>
+                    </tr>
+
+                    <!-- No 7 -->
+                    <tr class="hover:bg-slate-50/50 transition-colors duration-150 group">
+                        <td class="py-4 px-4 text-center font-bold text-slate-400 bg-slate-50/30 group-hover:bg-slate-50/80">7</td>
+                        <td class="py-4 px-6">
+                            <div class="flex flex-col gap-2">
+                                <div class="task-item flex items-start gap-2.5 p-2.5 rounded-lg border border-emerald-100/50 hover:border-emerald-200 bg-emerald-50/20 hover:bg-emerald-50/40 cursor-pointer transition-all duration-150 tap-highlight-none" data-id="7-1">
+                                    <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4 border-slate-300" onclick="toggleTask('7-1'); event.stopPropagation();">
+                                    <span class="task-text text-slate-700 font-medium select-all flex-1" onclick="copyText(this)">Membuat laporan bulanan pelaksanaan PKH dan laporan lainnya.</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-4 px-5 text-center">
+                            <a href="https://drive.google.com/drive/folders/1WDiJ6KpuHMJY2xb-rDyTOQKc5UigN7sC" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold border border-blue-100 hover:border-blue-200 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+                                </svg>
+                                1 Laporan
+                            </a>
+                        </td>
+                        <td class="py-4 px-5 text-center">
+                            <span class="inline-block px-3 py-1 bg-amber-50 text-amber-800 border border-amber-100 font-semibold rounded-lg text-xs">12 Laporan</span>
+                        </td>
+                    </tr>
+
+                    <!-- No 8 -->
+                    <tr class="hover:bg-slate-50/50 transition-colors duration-150 group">
+                        <td class="py-4 px-4 text-center font-bold text-slate-400 bg-slate-50/30 group-hover:bg-slate-50/80">8</td>
+                        <td class="py-4 px-6">
+                            <div class="flex flex-col gap-2">
+                                <div class="task-item flex items-start gap-2.5 p-2.5 rounded-lg border border-emerald-100/50 hover:border-emerald-200 bg-emerald-50/20 hover:bg-emerald-50/40 cursor-pointer transition-all duration-150 tap-highlight-none" data-id="8-1">
+                                    <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4 border-slate-300" onclick="toggleTask('8-1'); event.stopPropagation();">
+                                    <span class="task-text text-slate-700 font-medium select-all flex-1" onclick="copyText(this)">Melaksanakan Tindak Lanjut Hasil Pemeriksaan</span>
+                                </div>
+                                <div class="task-item flex items-start gap-2.5 p-2.5 rounded-lg border border-emerald-100/50 hover:border-emerald-200 bg-emerald-50/20 hover:bg-emerald-50/40 cursor-pointer transition-all duration-150 tap-highlight-none" data-id="8-2">
+                                    <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4 border-slate-300" onclick="toggleTask('8-2'); event.stopPropagation();">
+                                    <span class="task-text text-slate-700 font-medium select-all flex-1" onclick="copyText(this)">Melakukan sosialisasi kebijakan dan bisnis proses PKH kepada aparat pemerintah tingkat kecamatan, desa/kelurahan, KPM PKH, dan masyarakat umum secara berkala</span>
+                                </div>
+                                <div class="task-item flex items-start gap-2.5 p-2.5 rounded-lg border border-emerald-100/50 hover:border-emerald-200 bg-emerald-50/20 hover:bg-emerald-50/40 cursor-pointer transition-all duration-150 tap-highlight-none" data-id="8-3">
+                                    <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4 border-slate-300" onclick="toggleTask('8-3'); event.stopPropagation();">
+                                    <span class="task-text text-slate-700 font-medium select-all flex-1" onclick="copyText(this)">Mengikuti Rapat Koordinasi, Sosialisasi Kebijakan Proses Bisnis PKH dan Penguatan Kapasitas SDM</span>
+                                </div>
+                                <div class="task-item flex items-start gap-2.5 p-2.5 rounded-lg border border-emerald-100/50 hover:border-emerald-200 bg-emerald-50/20 hover:bg-emerald-50/40 cursor-pointer transition-all duration-150 tap-highlight-none" data-id="8-4">
+                                    <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4 border-slate-300" onclick="toggleTask('8-4'); event.stopPropagation();">
+                                    <span class="task-text text-slate-700 font-medium select-all flex-1" onclick="copyText(this)">Tugas Lainnya (Penugasan lainnya program Kementerian Sosial)</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-4 px-5 text-center">
+                            <a href="https://drive.google.com/drive/folders/1jG2MZq4ITB9DgqHpdMoyog02XomzK4YM" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold border border-blue-100 hover:border-blue-200 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+                                </svg>
+                                2 Laporan
+                            </a>
+                        </td>
+                        <td class="py-4 px-5 text-center">
+                            <span class="inline-block px-3 py-1 bg-amber-50 text-amber-800 border border-amber-100 font-semibold rounded-lg text-xs">24 Laporan</span>
+                        </td>
+                    </tr>
+
+                    <!-- No 9 -->
+                    <tr class="hover:bg-slate-50/50 transition-colors duration-150 group">
+                        <td class="py-4 px-4 text-center font-bold text-slate-400 bg-slate-50/30 group-hover:bg-slate-50/80">9</td>
+                        <td class="py-4 px-6">
+                            <div class="flex flex-col gap-2">
+                                <div class="task-item flex items-start gap-2.5 p-2.5 rounded-lg border border-emerald-100/50 hover:border-emerald-200 bg-emerald-50/20 hover:bg-emerald-50/40 cursor-pointer transition-all duration-150 tap-highlight-none" data-id="9-1">
+                                    <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4 border-slate-300" onclick="toggleTask('9-1'); event.stopPropagation();">
+                                    <span class="task-text text-slate-700 font-medium select-all flex-1" onclick="copyText(this)">Berperan aktif dalam memanfaatkan, menggunakan, melibatkan dan menyebarkan Media Sosial untuk menyampaikan semua program di Kementerian Sosial</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-4 px-5 text-center">
+                            <a href="https://drive.google.com/drive/folders/1kV7_lav8D9tnIYU1LLcA02LkfCOhgdL8" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold border border-blue-100 hover:border-blue-200 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+                                </svg>
+                                1 Laporan
+                            </a>
+                        </td>
+                        <td class="py-4 px-5 text-center">
+                            <span class="inline-block px-3 py-1 bg-amber-50 text-amber-800 border border-amber-100 font-semibold rounded-lg text-xs">100%</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- MOBILE CARDS VIEW -->
+        <div class="block md:hidden space-y-4" id="mobileCardsContainer">
+            <!-- Row 1 Card -->
+            <div class="mobile-card bg-white rounded-2xl shadow-sm border border-slate-200 p-4 relative" data-row-id="1">
+                <div class="flex items-center justify-between mb-3.5 border-b border-slate-100 pb-2">
+                    <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">KEGIATAN #1</span>
+                    <div class="flex gap-2">
+                        <span class="text-[10px] bg-amber-50 border border-amber-100 text-amber-800 px-2 py-0.5 rounded font-semibold">12 Lap / Th</span>
+                    </div>
+                </div>
+                <div class="space-y-3 mb-4">
+                    <div class="task-item p-3 bg-emerald-50/15 active:bg-emerald-50/40 rounded-xl border border-emerald-500/10 flex gap-3 transition-colors tap-highlight-none" data-id="1-1-m">
+                        <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4.5 w-4.5 border-slate-300" onclick="toggleTask('1-1'); event.stopPropagation();">
+                        <span class="task-text text-slate-700 text-sm leading-relaxed" onclick="copyText(this)">Melakukan edukasi dan sosialisasi pencairan secara tunai dan non tunai</span>
+                    </div>
+                    <div class="task-item p-3 bg-emerald-50/15 active:bg-emerald-50/40 rounded-xl border border-emerald-500/10 flex gap-3 transition-colors tap-highlight-none" data-id="1-2-m">
+                        <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4.5 w-4.5 border-slate-300" onclick="toggleTask('1-2'); event.stopPropagation();">
+                        <span class="task-text text-slate-700 text-sm leading-relaxed" onclick="copyText(this)">Melaksanakan Supervisi Permasalahan Bantuan Sosial</span>
+                    </div>
+                    <div class="task-item p-3 bg-emerald-50/15 active:bg-emerald-50/40 rounded-xl border border-emerald-500/10 flex gap-3 transition-colors tap-highlight-none" data-id="1-3-m">
+                        <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4.5 w-4.5 border-slate-300" onclick="toggleTask('1-3'); event.stopPropagation();">
+                        <span class="task-text text-slate-700 text-sm leading-relaxed" onclick="copyText(this)">Melaksanakan Monitoring/Pemantauan Penyaluran Bantuan Sosial</span>
+                    </div>
+                    <div class="task-item p-3 bg-emerald-50/15 active:bg-emerald-50/40 rounded-xl border border-emerald-500/10 flex gap-3 transition-colors tap-highlight-none" data-id="1-4-m">
+                        <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4.5 w-4.5 border-slate-300" onclick="toggleTask('1-4'); event.stopPropagation();">
+                        <span class="task-text text-slate-700 text-sm leading-relaxed" onclick="copyText(this)">Melaksanakan Penelitian penyaluran bantuan Sosial</span>
+                    </div>
+                </div>
+                <a href="https://drive.google.com/drive/folders/17junSfcfPuAU7dR5I9WnoAaoa2qLuSob" target="_blank" class="w-full flex items-center justify-center gap-2 bg-blue-50 active:bg-blue-100 text-blue-700 border border-blue-100 hover:border-blue-200 py-2.5 rounded-xl text-xs font-bold transition-all tap-highlight-none">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+                    </svg> Buka Drive Target Bulanan (1 Laporan)
+                </a>
+            </div>
+
+            <!-- Row 2 Card -->
+            <div class="mobile-card bg-white rounded-2xl shadow-sm border border-slate-200 p-4 relative" data-row-id="2">
+                <div class="flex items-center justify-between mb-3.5 border-b border-slate-100 pb-2">
+                    <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">KEGIATAN #2</span>
+                    <div class="flex gap-2">
+                        <span class="text-[10px] bg-amber-50 border border-amber-100 text-amber-800 px-2 py-0.5 rounded font-semibold">180 Lap / Th</span>
+                    </div>
+                </div>
+                <div class="space-y-3 mb-4">
+                    <div class="task-item p-3 bg-emerald-50/15 active:bg-emerald-50/40 rounded-xl border border-emerald-500/10 flex gap-3 transition-colors tap-highlight-none" data-id="2-1-m">
+                        <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4.5 w-4.5 border-slate-300" onclick="toggleTask('2-1'); event.stopPropagation();">
+                        <span class="task-text text-slate-700 text-sm leading-relaxed" onclick="copyText(this)">Melaksanakan Pertemuan Peningkatan Kemampuan Keluarga (P2K2)</span>
+                    </div>
+                </div>
+                <a href="https://drive.google.com/drive/folders/1ctLjBOPQC-15VchyO0eJaUivMCjA9u6a" target="_blank" class="w-full flex items-center justify-center gap-2 bg-blue-50 active:bg-blue-100 text-blue-700 border border-blue-100 hover:border-blue-200 py-2.5 rounded-xl text-xs font-bold transition-all tap-highlight-none">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+                    </svg> Buka Drive Target Bulanan (15 Laporan)
+                </a>
+            </div>
+
+            <!-- Row 3 Card -->
+            <div class="mobile-card bg-white rounded-2xl shadow-sm border border-slate-200 p-4 relative" data-row-id="3">
+                <div class="flex items-center justify-between mb-3.5 border-b border-slate-100 pb-2">
+                    <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">KEGIATAN #3</span>
+                    <div class="flex gap-2">
+                        <span class="text-[10px] bg-amber-50 border border-amber-100 text-amber-800 px-2 py-0.5 rounded font-semibold">24 Lap / Th</span>
+                    </div>
+                </div>
+                <div class="space-y-3 mb-4">
+                    <div class="task-item p-3 bg-emerald-50/15 active:bg-emerald-50/40 rounded-xl border border-emerald-500/10 flex gap-3 transition-colors tap-highlight-none" data-id="3-1-m">
+                        <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4.5 w-4.5 border-slate-300" onclick="toggleTask('3-1'); event.stopPropagation();">
+                        <span class="task-text text-slate-700 text-sm leading-relaxed" onclick="copyText(this)">Melaksanakan Verifikasi Komitmen Pendidikan, Kesehatan dan Kesejahteraan Sosial</span>
+                    </div>
+                    <div class="task-item p-3 bg-emerald-50/15 active:bg-emerald-50/40 rounded-xl border border-emerald-500/10 flex gap-3 transition-colors tap-highlight-none" data-id="3-2-m">
+                        <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4.5 w-4.5 border-slate-300" onclick="toggleTask('3-2'); event.stopPropagation();">
+                        <span class="task-text text-slate-700 text-sm leading-relaxed" onclick="copyText(this)">Melakukan pendampingan, mediasi, dan fasilitasi kepada KPM PKH dalam proses perubahan perilaku, pola pikir yang mandiri dan produktif</span>
+                    </div>
+                </div>
+                <a href="https://drive.google.com/drive/folders/1C_2jmSbKrV65WhxpNo8YSpXppD-oFFJ7" target="_blank" class="w-full flex items-center justify-center gap-2 bg-blue-50 active:bg-blue-100 text-blue-700 border border-blue-100 hover:border-blue-200 py-2.5 rounded-xl text-xs font-bold transition-all tap-highlight-none">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+                    </svg> Buka Drive Target Bulanan (2 Laporan)
+                </a>
+            </div>
+
+            <!-- Row 4 Card -->
+            <div class="mobile-card bg-white rounded-2xl shadow-sm border border-slate-200 p-4 relative" data-row-id="4">
+                <div class="flex items-center justify-between mb-3.5 border-b border-slate-100 pb-2">
+                    <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">KEGIATAN #4</span>
+                    <div class="flex gap-2">
+                        <span class="text-[10px] bg-amber-50 border border-amber-100 text-amber-800 px-2 py-0.5 rounded font-semibold">24 Lap (Graduasi)</span>
+                    </div>
+                </div>
+                <div class="space-y-3 mb-4">
+                    <div class="task-item p-3 bg-emerald-50/15 active:bg-emerald-50/40 rounded-xl border border-emerald-500/10 flex gap-3 transition-colors tap-highlight-none" data-id="4-1-m">
+                        <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4.5 w-4.5 border-slate-300" onclick="toggleTask('4-1'); event.stopPropagation();">
+                        <span class="task-text text-slate-700 text-sm leading-relaxed" onclick="copyText(this)">Melakukan usulan KPM Graduasi mandiri dan Pemberdayaan PPSE</span>
+                    </div>
+                </div>
+                <a href="https://drive.google.com/drive/folders/1TYGOB8U72fsWm8Ny0EsJa7ng41s2ivAc" target="_blank" class="w-full flex items-center justify-center gap-2 bg-blue-50 active:bg-blue-100 text-blue-700 border border-blue-100 hover:border-blue-200 py-2.5 rounded-xl text-xs font-bold transition-all tap-highlight-none">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+                    </svg> Buka Drive Target Bulanan (2 Laporan)
+                </a>
+            </div>
+
+            <!-- Row 5 Card -->
+            <div class="mobile-card bg-white rounded-2xl shadow-sm border border-slate-200 p-4 relative" data-row-id="5">
+                <div class="flex items-center justify-between mb-3.5 border-b border-slate-100 pb-2">
+                    <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">KEGIATAN #5</span>
+                    <div class="flex gap-2">
+                        <span class="text-[10px] bg-amber-50 border border-amber-100 text-amber-800 px-2 py-0.5 rounded font-semibold">36 Lap / Th</span>
+                    </div>
+                </div>
+                <div class="space-y-3 mb-4">
+                    <div class="task-item p-3 bg-emerald-50/15 active:bg-emerald-50/40 rounded-xl border border-emerald-500/10 flex gap-3 transition-colors tap-highlight-none" data-id="5-1-m">
+                        <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4.5 w-4.5 border-slate-300" onclick="toggleTask('5-1'); event.stopPropagation();">
+                        <span class="task-text text-slate-700 text-sm leading-relaxed" onclick="copyText(this)">Melaksanakan Pemutakhiran Data</span>
+                    </div>
+                    <div class="task-item p-3 bg-emerald-50/15 active:bg-emerald-50/40 rounded-xl border border-emerald-500/10 flex gap-3 transition-colors tap-highlight-none" data-id="5-2-m">
+                        <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4.5 w-4.5 border-slate-300" onclick="toggleTask('5-2'); event.stopPropagation();">
+                        <span class="task-text text-slate-700 text-sm leading-relaxed" onclick="copyText(this)">Melaksanakan proses bisnis PKH yang meliputi verifikasi validasi calon penerima bantuan sosial</span>
+                    </div>
+                </div>
+                <a href="https://drive.google.com/drive/folders/1HptEjPNLncvlGEhHEsthNUys4yXk5_h8" target="_blank" class="w-full flex items-center justify-center gap-2 bg-blue-50 active:bg-blue-100 text-blue-700 border border-blue-100 hover:border-blue-200 py-2.5 rounded-xl text-xs font-bold transition-all tap-highlight-none">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+                    </svg> Buka Drive Target Bulanan (3 Laporan)
+                </a>
+            </div>
+
+            <!-- Row 6 Card -->
+            <div class="mobile-card bg-white rounded-2xl shadow-sm border border-slate-200 p-4 relative" data-row-id="6">
+                <div class="flex items-center justify-between mb-3.5 border-b border-slate-100 pb-2">
+                    <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">KEGIATAN #6</span>
+                    <div class="flex gap-2">
+                        <span class="text-[10px] bg-amber-50 border border-amber-100 text-amber-800 px-2 py-0.5 rounded font-semibold">100%</span>
+                    </div>
+                </div>
+                <div class="space-y-3 mb-4">
+                    <div class="task-item p-3 bg-emerald-50/15 active:bg-emerald-50/40 rounded-xl border border-emerald-500/10 flex gap-3 transition-colors tap-highlight-none" data-id="6-1-m">
+                        <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4.5 w-4.5 border-slate-300" onclick="toggleTask('6-1'); event.stopPropagation();">
+                        <span class="task-text text-slate-700 text-sm leading-relaxed" onclick="copyText(this)">Melaksanakan Respon Kasus/Pengaduan/kebencanaan/Kerentanan</span>
+                    </div>
+                </div>
+                <a href="https://drive.google.com/drive/folders/13pbT9BZ7STXRUlqjmn09a4AEboJHK8TE" target="_blank" class="w-full flex items-center justify-center gap-2 bg-blue-50 active:bg-blue-100 text-blue-700 border border-blue-100 hover:border-blue-200 py-2.5 rounded-xl text-xs font-bold transition-all tap-highlight-none">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+                    </svg> Buka Drive Target Bulanan (1 Laporan)
+                </a>
+            </div>
+
+            <!-- Row 7 Card -->
+            <div class="mobile-card bg-white rounded-2xl shadow-sm border border-slate-200 p-4 relative" data-row-id="7">
+                <div class="flex items-center justify-between mb-3.5 border-b border-slate-100 pb-2">
+                    <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">KEGIATAN #7</span>
+                    <div class="flex gap-2">
+                        <span class="text-[10px] bg-amber-50 border border-amber-100 text-amber-800 px-2 py-0.5 rounded font-semibold">12 Lap / Th</span>
+                    </div>
+                </div>
+                <div class="space-y-3 mb-4">
+                    <div class="task-item p-3 bg-emerald-50/15 active:bg-emerald-50/40 rounded-xl border border-emerald-500/10 flex gap-3 transition-colors tap-highlight-none" data-id="7-1-m">
+                        <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4.5 w-4.5 border-slate-300" onclick="toggleTask('7-1'); event.stopPropagation();">
+                        <span class="task-text text-slate-700 text-sm leading-relaxed" onclick="copyText(this)">Membuat laporan bulanan pelaksanaan PKH dan laporan lainnya.</span>
+                    </div>
+                </div>
+                <a href="https://drive.google.com/drive/folders/1WDiJ6KpuHMJY2xb-rDyTOQKc5UigN7sC" target="_blank" class="w-full flex items-center justify-center gap-2 bg-blue-50 active:bg-blue-100 text-blue-700 border border-blue-100 hover:border-blue-200 py-2.5 rounded-xl text-xs font-bold transition-all tap-highlight-none">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+                    </svg> Buka Drive Target Bulanan (1 Laporan)
+                </a>
+            </div>
+
+            <!-- Row 8 Card -->
+            <div class="mobile-card bg-white rounded-2xl shadow-sm border border-slate-200 p-4 relative" data-row-id="8">
+                <div class="flex items-center justify-between mb-3.5 border-b border-slate-100 pb-2">
+                    <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">KEGIATAN #8</span>
+                    <div class="flex gap-2">
+                        <span class="text-[10px] bg-amber-50 border border-amber-100 text-amber-800 px-2 py-0.5 rounded font-semibold">24 Lap / Th</span>
+                    </div>
+                </div>
+                <div class="space-y-3 mb-4">
+                    <div class="task-item p-3 bg-emerald-50/15 active:bg-emerald-50/40 rounded-xl border border-emerald-500/10 flex gap-3 transition-colors tap-highlight-none" data-id="8-1-m">
+                        <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4.5 w-4.5 border-slate-300" onclick="toggleTask('8-1'); event.stopPropagation();">
+                        <span class="task-text text-slate-700 text-sm leading-relaxed" onclick="copyText(this)">Melaksanakan Tindak Lanjut Hasil Pemeriksaan</span>
+                    </div>
+                    <div class="task-item p-3 bg-emerald-50/15 active:bg-emerald-50/40 rounded-xl border border-emerald-500/10 flex gap-3 transition-colors tap-highlight-none" data-id="8-2-m">
+                        <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4.5 w-4.5 border-slate-300" onclick="toggleTask('8-2'); event.stopPropagation();">
+                        <span class="task-text text-slate-700 text-sm leading-relaxed" onclick="copyText(this)">Melakukan sosialisasi kebijakan dan bisnis proses PKH kepada aparat pemerintah tingkat kecamatan, desa/kelurahan, KPM PKH, dan masyarakat umum secara berkala</span>
+                    </div>
+                    <div class="task-item p-3 bg-emerald-50/15 active:bg-emerald-50/40 rounded-xl border border-emerald-500/10 flex gap-3 transition-colors tap-highlight-none" data-id="8-3-m">
+                        <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4.5 w-4.5 border-slate-300" onclick="toggleTask('8-3'); event.stopPropagation();">
+                        <span class="task-text text-slate-700 text-sm leading-relaxed" onclick="copyText(this)">Mengikuti Rapat Koordinasi, Sosialisasi Kebijakan Proses Bisnis PKH dan Penguatan Kapasitas SDM</span>
+                    </div>
+                    <div class="task-item p-3 bg-emerald-50/15 active:bg-emerald-50/40 rounded-xl border border-emerald-500/10 flex gap-3 transition-colors tap-highlight-none" data-id="8-4-m">
+                        <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4.5 w-4.5 border-slate-300" onclick="toggleTask('8-4'); event.stopPropagation();">
+                        <span class="task-text text-slate-700 text-sm leading-relaxed" onclick="copyText(this)">Tugas Lainnya (Penugasan lainnya program Kementerian Sosial)</span>
+                    </div>
+                </div>
+                <a href="https://drive.google.com/drive/folders/1jG2MZq4ITB9DgqHpdMoyog02XomzK4YM" target="_blank" class="w-full flex items-center justify-center gap-2 bg-blue-50 active:bg-blue-100 text-blue-700 border border-blue-100 hover:border-blue-200 py-2.5 rounded-xl text-xs font-bold transition-all tap-highlight-none">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+                    </svg> Buka Drive Target Bulanan (2 Laporan)
+                </a>
+            </div>
+
+            <!-- Row 9 Card -->
+            <div class="mobile-card bg-white rounded-2xl shadow-sm border border-slate-200 p-4 relative" data-row-id="9">
+                <div class="flex items-center justify-between mb-3.5 border-b border-slate-100 pb-2">
+                    <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">KEGIATAN #9</span>
+                    <div class="flex gap-2">
+                        <span class="text-[10px] bg-amber-50 border border-amber-100 text-amber-800 px-2 py-0.5 rounded font-semibold">100%</span>
+                    </div>
+                </div>
+                <div class="space-y-3 mb-4">
+                    <div class="task-item p-3 bg-emerald-50/15 active:bg-emerald-50/40 rounded-xl border border-emerald-500/10 flex gap-3 transition-colors tap-highlight-none" data-id="9-1-m">
+                        <input type="checkbox" class="task-checkbox mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-4.5 w-4.5 border-slate-300" onclick="toggleTask('9-1'); event.stopPropagation();">
+                        <span class="task-text text-slate-700 text-sm leading-relaxed" onclick="copyText(this)">Berperan aktif dalam memanfaatkan, menggunakan, melibatkan dan menyebarkan Media Sosial untuk menyampaikan semua program di Kementerian Sosial</span>
+                    </div>
+                </div>
+                <a href="https://drive.google.com/drive/folders/1kV7_lav8D9tnIYU1LLcA02LkfCOhgdL8" target="_blank" class="w-full flex items-center justify-center gap-2 bg-blue-50 active:bg-blue-100 text-blue-700 border border-blue-100 hover:border-blue-200 py-2.5 rounded-xl text-xs font-bold transition-all tap-highlight-none">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+                    </svg> Buka Drive Target Bulanan (1 Laporan)
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Global Premium Feedback Toast Container -->
+    <div id="toast-wrapper" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none flex flex-col items-center gap-2">
+        <!-- Dynamic Toast Body -->
+        <div id="toast" class="opacity-0 translate-y-4 scale-95 transition-all duration-300 ease-out bg-slate-900 text-white text-xs md:text-sm font-medium px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 border border-slate-800">
+            <span class="bg-emerald-500 text-slate-900 p-0.5 rounded-full">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </span>
+            <span id="toast-message">Salin Berhasil!</span>
+        </div>
+    </div>
+
+    <script>
+        // Storage Keys
+        const STORAGE_KEY = 'pkh_checked_tasks';
+        let checkedTasks = [];
+
+        // App Initialization
+        window.onload = function() {
+            loadCheckedState();
+            updateProgressStats();
+        }
+
+        // Toggle Task Checkbox & Save State
+        function toggleTask(id) {
+            const index = checkedTasks.indexOf(id);
+            if (index > -1) {
+                checkedTasks.splice(index, 1);
+            } else {
+                checkedTasks.push(id);
+                // Trigger a mini success feedback when completing a task
+                showToast("Tugas ditandai selesai!", "bg-indigo-900 border-indigo-800");
+            }
+            saveCheckedState();
+            syncCheckboxes(id, index === -1);
+            updateProgressStats();
+        }
+
+        // Synchronize Desktop Checkbox with Mobile Checkbox
+        function syncCheckboxes(baseId, isChecked) {
+            // Desktop Task selector
+            const desktopTask = document.querySelector(`[data-id="${baseId}"]`);
+            // Mobile Task selector
+            const mobileTask = document.querySelector(`[data-id="${baseId}-m"]`);
+
+            if (desktopTask) {
+                const cb = desktopTask.querySelector('.task-checkbox');
+                if (cb) cb.checked = isChecked;
+                if (isChecked) {
+                    desktopTask.classList.add('bg-emerald-50/60', 'border-emerald-300');
+                    desktopTask.classList.remove('bg-emerald-50/20');
+                } else {
+                    desktopTask.classList.remove('bg-emerald-50/60', 'border-emerald-300');
+                    desktopTask.classList.add('bg-emerald-50/20');
+                }
+            }
+
+            if (mobileTask) {
+                const cb = mobileTask.querySelector('.task-checkbox');
+                if (cb) cb.checked = isChecked;
+                if (isChecked) {
+                    mobileTask.classList.add('bg-emerald-100/30', 'border-emerald-300');
+                    mobileTask.classList.remove('bg-emerald-50/15');
+                } else {
+                    mobileTask.classList.remove('bg-emerald-100/30', 'border-emerald-300');
+                    mobileTask.classList.add('bg-emerald-50/15');
+                }
+            }
+        }
+
+        // Save progress to LocalStorage
+        function saveCheckedState() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(checkedTasks));
+        }
+
+        // Load progress from LocalStorage
+        function loadCheckedState() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                try {
+                    checkedTasks = JSON.parse(stored);
+                    checkedTasks.forEach(id => {
+                        syncCheckboxes(id, true);
+                    });
+                } catch(e) {
+                    console.error("Gagal memuat status tersimpan", e);
+                }
+            }
+        }
+
+        // Reset all checked states
+        function resetChecklist() {
+            if (checkedTasks.length === 0) return;
+            
+            // Uncheck all in current local cache
+            const tempArray = [...checkedTasks];
+            tempArray.forEach(id => {
+                syncCheckboxes(id, false);
+            });
+            checkedTasks = [];
+            saveCheckedState();
+            updateProgressStats();
+            showToast("Semua checklist telah direset", "bg-slate-800 border-slate-700");
+        }
+
+        // Dynamic Calculations for Dashboard Progress Stats
+        function updateProgressStats() {
+            const totalTasks = 17; // Static fixed length of tasks
+            const checkedCount = checkedTasks.length;
+            
+            document.getElementById('completed-count').innerText = checkedCount;
+            document.getElementById('total-count').innerText = totalTasks;
+            
+            const percentage = Math.round((checkedCount / totalTasks) * 100);
+            const progressBar = document.getElementById('progress-bar');
+            progressBar.style.width = percentage + '%';
+        }
+
+        // Advanced Clipboard Copy Helper
+        function copyText(element) {
+            const text = element.innerText;
+            
+            // Apply visual active flash effect on copy
+            const parentItem = element.closest('.task-item');
+            if (parentItem) {
+                parentItem.classList.add('scale-[0.98]', 'bg-emerald-100/40');
+                setTimeout(() => {
+                    parentItem.classList.remove('scale-[0.98]', 'bg-emerald-100/40');
+                }, 200);
+            }
+
+            // Copy Process
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text)
+                    .then(() => showToast("Teks disalin ke papan klip!"))
+                    .catch(() => fallbackCopy(text));
+            } else {
+                fallbackCopy(text);
+            }
+        }
+
+        // Robust Fallback Copy for older devices/embedded browsers
+        function fallbackCopy(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";  // Avoid scrolling to bottom on mobile
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast("Teks disalin ke papan klip!");
+            } catch (err) {
+                showToast("Gagal menyalin teks", "bg-red-900 border-red-800");
+                console.error('Gagal menyalin', err);
+            }
+            document.body.removeChild(textArea);
+        }
+
+        // Live Search Filtering Mechanics
+        function filterTasks() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const clearBtn = document.getElementById('clearSearch');
+
+            // Toggle clear search button visibility
+            if (query.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+
+            // Desktop Filtering
+            const desktopRows = document.querySelectorAll('#desktopTableBody tr');
+            let desktopMatchFound = false;
+
+            desktopRows.forEach(row => {
+                const taskTexts = Array.from(row.querySelectorAll('.task-text'))
+                                      .map(el => el.innerText.toLowerCase());
+                const targetText = row.querySelector('.col-target') ? row.querySelector('.col-target').innerText.toLowerCase() : '';
+                
+                // Check if any subtask or row element matches search query
+                const matches = taskTexts.some(text => text.includes(query)) || targetText.includes(query);
+                
+                if (matches) {
+                    row.style.display = '';
+                    desktopMatchFound = true;
+                    // Highlight individual match targets
+                    row.querySelectorAll('.task-item').forEach(item => {
+                        const itemText = item.querySelector('.task-text').innerText.toLowerCase();
+                        if (query !== '' && itemText.includes(query)) {
+                            item.classList.add('ring-2', 'ring-emerald-500/50');
+                        } else {
+                            item.classList.remove('ring-2', 'ring-emerald-500/50');
+                        }
+                    });
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Mobile Cards Filtering
+            const mobileCards = document.querySelectorAll('.mobile-card');
+            let mobileMatchFound = false;
+
+            mobileCards.forEach(card => {
+                const taskTexts = Array.from(card.querySelectorAll('.task-text'))
+                                      .map(el => el.innerText.toLowerCase());
+                
+                const matches = taskTexts.some(text => text.includes(query));
+                
+                if (matches) {
+                    card.style.display = '';
+                    mobileMatchFound = true;
+                    // Highlight match in cards
+                    card.querySelectorAll('.task-item').forEach(item => {
+                        const itemText = item.querySelector('.task-text').innerText.toLowerCase();
+                        if (query !== '' && itemText.includes(query)) {
+                            item.classList.add('ring-2', 'ring-emerald-500/50');
+                        } else {
+                            item.classList.remove('ring-2', 'ring-emerald-500/50');
+                        }
+                    });
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Show 'no results' element if both lists are completely filtered out
+            const noResults = document.getElementById('no-results');
+            const isDesktopVisible = window.innerWidth >= 768;
+
+            if ((isDesktopVisible && !desktopMatchFound) || (!isDesktopVisible && !mobileMatchFound)) {
+                noResults.classList.remove('hidden');
+            } else {
+                noResults.classList.add('hidden');
+            }
+        }
+
+        // Clear Search text box helper
+        function clearSearchField() {
+            const input = document.getElementById('searchInput');
+            input.value = '';
+            filterTasks();
+            input.focus();
+        }
+
+        // Smooth Custom Notification System
+        let toastTimeout;
+        function showToast(message, customBgClass = "bg-slate-900 border-slate-800") {
+            const toast = document.getElementById("toast");
+            const toastMessage = document.getElementById("toast-message");
+            
+            // Clear any active timeout
+            clearTimeout(toastTimeout);
+            
+            // Reset background colors first
+            toast.className = toast.className.replace(/bg-\w+-\d+/g, '').replace(/border-\w+-\d+/g, '');
+            
+            // Set message and dynamic style
+            toastMessage.innerText = message;
+            toast.className += ` ${customBgClass}`;
+
+            // Make toast visible with smooth transitions
+            toast.classList.remove('opacity-0', 'translate-y-4', 'scale-95');
+            toast.classList.add('opacity-100', 'translate-y-0', 'scale-100');
+
+            // Hide after delay
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0', 'scale-100');
+                toast.classList.add('opacity-0', 'translate-y-4', 'scale-95');
+            }, 2000);
+        }
+    </script>
+   <!-- Tambahkan tombol kembali -->
+    <script src="../tombol-kembali.js"></script>
+</body>
+</html>
