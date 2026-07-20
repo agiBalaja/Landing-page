@@ -64,6 +64,10 @@
             <label>Tempat/Lokasi:</label>
             <input type="text" id="inputTempat" placeholder="Contoh: Pelepat Lintas" oninput="updatePreview()">
         </div>
+        <div class="col">
+            <label>Tanggal Surat/Laporan (Manual):</label>
+            <input type="date" id="inputTanggal" onchange="updatePreview()">
+        </div>
     </div>
 
     <div class="row">
@@ -78,11 +82,31 @@
     </div>
 
     <div class="row">
-        <div class="col" style="flex: 1;">
+        <div class="col">
+            <label>Opsi Periode:</label>
+            <select id="modeBulan" onchange="handleModeBulanChange()">
+                <option value="bulan">Per Bulan</option>
+                <option value="triwulan" selected>Per Triwulan</option>
+            </select>
+        </div>
+        
+        <!-- Input tambahan jika memilih Mode Triwulan -->
+        <div class="col" id="colTriwulan">
+            <label>Pilih Triwulan:</label>
+            <select id="selectTriwulan" onchange="handleTriwulanSelect()">
+                <option value="TW1">Triwulan I (Jan, Feb, Mar)</option>
+                <option value="TW2">Triwulan II (Apr, Mei, Jun)</option>
+                <option value="TW3">Triwulan III (Jul, Ags, Sep)</option>
+                <option value="TW4">Triwulan IV (Okt, Nov, Des)</option>
+            </select>
+        </div>
+
+        <div class="col" style="flex: 2;">
             <label>Nama Bulan (Pisahkan Koma):</label>
             <input type="text" id="inputBulan" value="JANUARI, FEBRUARI, MARET" oninput="updateTableStructure()">
         </div>
-        <div class="col">
+        
+        <div class="col" id="colJmlBulan">
             <label>Jml Bulan:</label>
             <select id="jmlBulan" onchange="updateTableStructure()">
                 <option value="1">1</option>
@@ -129,10 +153,48 @@
 <script>
     let rawData = [];
 
+    // Fungsi konversi format tanggal YYYY-MM-DD ke "DD Bulan YYYY"
     function getFormattedDate() {
-        const d = new Date();
+        const val = document.getElementById('inputTanggal').value;
+        if (!val) return "........";
+        
+        const d = new Date(val);
+        if (isNaN(d.getTime())) return "........";
+        
         const bln = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
         return `${d.getDate()} ${bln[d.getMonth()]} ${d.getFullYear()}`;
+    }
+
+    // Fungsi penanganan pergantian mode Bulan / Triwulan
+    function handleModeBulanChange() {
+        const mode = document.getElementById('modeBulan').value;
+        const colTriwulan = document.getElementById('colTriwulan');
+        const jmlBulanSelect = document.getElementById('jmlBulan');
+
+        if (mode === 'triwulan') {
+            colTriwulan.style.display = 'flex';
+            jmlBulanSelect.value = "3";
+            handleTriwulanSelect();
+        } else {
+            colTriwulan.style.display = 'none';
+            updateTableStructure();
+        }
+    }
+
+    // Fungsi penanganan opsi dropdown Triwulan
+    function handleTriwulanSelect() {
+        const tw = document.getElementById('selectTriwulan').value;
+        const inputBulan = document.getElementById('inputBulan');
+        const jmlBulanSelect = document.getElementById('jmlBulan');
+        
+        jmlBulanSelect.value = "3";
+
+        if (tw === 'TW1') inputBulan.value = "JANUARI, FEBRUARI, MARET";
+        else if (tw === 'TW2') inputBulan.value = "APRIL, MEI, JUNI";
+        else if (tw === 'TW3') inputBulan.value = "JULI, AGUSTUS, SEPTEMBER";
+        else if (tw === 'TW4') inputBulan.value = "OKTOBER, NOVEMBER, DESEMBER";
+
+        updateTableStructure();
     }
 
     function updatePreview() {
@@ -168,8 +230,6 @@
             const wb = XLSX.read(data, {type: 'array'});
             const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: 1});
             
-            // Ekstraksi NPSN dan Nama Sekolah
-            // Berdasarkan gambar, NPSN biasanya di baris 2 (indeks 1) dan Nama Sekolah baris 3 (indeks 2)
             if (rows[1] && rows[1][1]) {
                 document.getElementById('npsnVal').innerText = String(rows[1][1]).replace(':', '').trim();
             }
@@ -230,7 +290,6 @@
 
         doc.setFontSize(11).setFont(undefined, 'bold').text("FORM VERIFIKASI KOMITMEN PENDIDIKAN", 148, 12, { align: "center" });
         
-        // Header Info di PDF
         doc.setFontSize(9).setFont(undefined, 'normal');
         doc.text(`NPSN : ${npsn}`, 14, 20);
         doc.text(`Nama Sekolah : ${sekolah}`, 14, 24);
@@ -271,7 +330,8 @@
         doc.save(`Verkom_${sekolah}.pdf`);
     }
 
-    updateTableStructure();
+    // Inisialisasi awal
+    handleModeBulanChange();
     updatePreview();
 </script>
     <!-- Tambahkan tombol kembali -->
