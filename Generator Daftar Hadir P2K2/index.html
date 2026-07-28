@@ -6,7 +6,7 @@
     <title>Generator Daftar Hadir P2K2 - Auto Day</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-	    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DV25BYV3TL"></script>
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-DV25BYV3TL"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -38,6 +38,9 @@
     </style>
 </head>
 <body>
+
+<!-- Menambahkan elemen gambar tersembunyi untuk ditarik ke dalam PDF -->
+<img id="logoPkh" src="download.jfif" style="display: none;" crossorigin="anonymous">
 
 <div class="container">
     <h2>SISTEM DAFTAR HADIR P2K2</h2>
@@ -119,7 +122,18 @@
         const hari = getNamaHari(tglValue) || "-";
         const tgl = formatTglIndo(tglValue);
 
-        // Header (Berdasarkan referensi [cite: 1, 2, 3])
+        // --- TAMBAHAN LOGO PKH ---
+        try {
+            const logoPkh = document.getElementById('logoPkh');
+            // doc.addImage(elemenGambar, format, x, y, width, height)
+            // Diposisikan di sebelah kiri kop dengan ukuran 30x16 mm
+            doc.addImage(logoPkh, 'JPEG', 15, 10, 30, 16);
+        } catch (error) {
+            console.warn("Gagal memuat logo: Pastikan file download.jfif berada di folder yang sama.", error);
+        }
+        // -------------------------
+
+        // Header (Berdasarkan referensi)
         doc.setFontSize(10).setFont(undefined, 'bold');
         doc.text("KEMENTERIAN SOSIAL REPUBLIK INDONESIA", 105, 15, { align: "center" });
         doc.setFontSize(12);
@@ -137,7 +151,7 @@
         doc.text("Hari / Tanggal", startX, 44); doc.text(":", dotX, 44); doc.text(`${hari}, ${tgl}`, dotX + 3, 44);
         doc.text("Tempat", startX, 50);        doc.text(":", dotX, 50); doc.text(tempat, dotX + 3, 50);
 
-        // Data Tabel [cite: 10]
+        // Data Tabel 
         const bodyData = [];
         for (let i = 1; i <= jml; i++) {
             if (i % 2 !== 0) {
@@ -162,7 +176,7 @@
             styles: { minCellHeight: 8, valign: 'middle', fontSize: 9 }
         });
 
-        // Footer Tanda Tangan [cite: 11, 12]
+        // Footer Tanda Tangan 
         let finalY = doc.lastAutoTable.finalY + 15;
         if (finalY > 250) { doc.addPage(); finalY = 20; }
 
