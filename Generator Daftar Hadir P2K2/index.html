@@ -26,12 +26,21 @@
         label { font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333; }
         input { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; width: 100%; box-sizing: border-box; }
         
+        /* Tombol Generate / Unduh (Merah) */
         .btn-generate { 
             width: 100%; background: #d32f2f; color: white; padding: 15px; border: none; 
             border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; 
             margin-top: 20px; transition: 0.3s;
         }
         .btn-generate:hover { background: #b71c1c; }
+
+        /* Tombol Print (Biru) */
+        .btn-print { 
+            width: 100%; background: #1976d2; color: white; padding: 15px; border: none; 
+            border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; 
+            margin-top: 10px; transition: 0.3s;
+        }
+        .btn-print:hover { background: #115293; }
         
         /* Highlight untuk input otomatis */
         .auto-input { background-color: #f8f9fa; color: #666; cursor: not-allowed; }
@@ -82,7 +91,9 @@
         </div>
     </div>
 
-    <button onclick="generatePDF()" class="btn-generate">GENERATE DAFTAR HADIR</button>
+    <!-- Dua tombol terpisah untuk Unduh dan Cetak Langsung -->
+    <button onclick="generatePDF()" class="btn-generate">UNDUH PDF DAFTAR HADIR</button>
+    <button onclick="printPDF()" class="btn-print">PRINT LANGSUNG</button>
 </div>
 
 <script>
@@ -108,7 +119,8 @@
         return `${d.getDate()} ${bln[d.getMonth()]} ${d.getFullYear()}`;
     }
 
-    function generatePDF() {
+    // Fungsi Inti untuk merakit PDF (Digunakan oleh tombol Unduh maupun Print)
+    function buildPDFDocument() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('p', 'mm', 'a4');
 
@@ -125,15 +137,13 @@
         // --- TAMBAHAN LOGO PKH ---
         try {
             const logoPkh = document.getElementById('logoPkh');
-            // doc.addImage(elemenGambar, format, x, y, width, height)
-            // Diposisikan di sebelah kiri kop dengan ukuran 30x16 mm
             doc.addImage(logoPkh, 'JPEG', 15, 10, 30, 16);
         } catch (error) {
             console.warn("Gagal memuat logo: Pastikan file download.jfif berada di folder yang sama.", error);
         }
         // -------------------------
 
-        // Header (Berdasarkan referensi)
+        // Header 
         doc.setFontSize(10).setFont(undefined, 'bold');
         doc.text("KEMENTERIAN SOSIAL REPUBLIK INDONESIA", 105, 15, { align: "center" });
         doc.setFontSize(12);
@@ -186,7 +196,22 @@
         doc.setFont(undefined, 'normal');
         doc.text(`NIP. ${nip}`, 140, finalY + 25);
 
+        return { doc, kelompok };
+    }
+
+    // Fungsi 1: Unduh PDF
+    function generatePDF() {
+        const { doc, kelompok } = buildPDFDocument();
         doc.save(`Absen_P2K2_${kelompok}.pdf`);
+    }
+
+    // Fungsi 2: Print Langsung
+    function printPDF() {
+        const { doc } = buildPDFDocument();
+        // Menambahkan perintah auto-print bawaan jsPDF
+        doc.autoPrint(); 
+        // Membuka PDF di tab baru menggunakan blob URL
+        window.open(doc.output('bloburl'), '_blank');
     }
 </script>
     <!-- Tambahkan tombol kembali -->
