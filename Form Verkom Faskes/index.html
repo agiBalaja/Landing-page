@@ -8,6 +8,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-DV25BYV3TL"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-DV25BYV3TL');
+</script>
 
 <style>
     body {
@@ -531,17 +539,18 @@ function exportToPDF() {
        .setFont(undefined, 'bold')
        .text("FORM VERIFIKASI KOMITMEN FASKES", 148, 12, { align: "center" });
 
-    doc.setFontSize(9)
+    doc.setFontSize(10)
        .setFont(undefined, 'normal');
 
-    doc.text(`Jenis : Verifikasi Komitmen Faskes`, 14, 20);
-    doc.text(`Periode : ${periodeTeks}`, 14, 24);
+    doc.text(`JENIS : Verifikasi Komitmen Faskes`, 14, 20);
+    doc.text(`PERIODE : ${periodeTeks}`, 14, 24);
 
     doc.autoTable({
         html: '#verkomTable',
         startY: 28,
         theme: 'grid',
         headStyles: {
+			fontSize: 9,
             fillColor: [187, 222, 251],
             textColor: [0,0,0],
             lineColor: [0,0,0],
@@ -550,7 +559,7 @@ function exportToPDF() {
             valign: 'middle'
         },
         styles: {
-            fontSize: 11,
+            fontSize: 9,
             cellPadding: 1,
             lineColor: [0,0,0],
             lineWidth: 0.1,
