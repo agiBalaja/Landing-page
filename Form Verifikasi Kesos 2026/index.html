@@ -4,8 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Form Verifikasi Kesos 2026</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Library jsPDF & AutoTable -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    	<script async src="https://www.googletagmanager.com/gtag/js?id=G-DV25BYV3TL"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-DV25BYV3TL');
+</script>
     <style>
         * { box-sizing: border-box; }
         body { 
@@ -24,7 +34,6 @@
         }
         .controls h3 { margin-top: 0; color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px; }
         
-        /* Grid Layout untuk Form Input (Desktop: 2 Kolom) */
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -42,26 +51,33 @@
             outline: none; border-color: #0056b3;
         }
 
-        .controls button {
+        .btn-primary {
             background: #0056b3; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; width: 100%;
         }
-        .controls button:hover { background: #004494; }
+        .btn-primary:hover { background: #004494; }
         
-        /* Kontainer Responsif untuk Area Pratinjau Dokumen */
+        .btn-secondary {
+            background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-bottom: 15px;
+        }
+        .btn-secondary:hover { background: #218838; }
+
+        .btn-danger {
+            background: #dc3545; color: white; border: none; padding: 3px 8px; border-radius: 3px; cursor: pointer; font-size: 8pt;
+        }
+        
         .preview-container {
             width: 100%;
-            overflow-x: auto; /* Memungkinkan scroll horizontal di HP agar tabel tidak hancur */
+            overflow-x: auto;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             background: white;
         }
 
-        /* Printable Area Styles */
         .printable-area { 
             background: white; 
             padding: 30px; 
             width: 100%; 
-            min-width: 1024px; /* Mengunci lebar desktop agar hasil PDF di HP tidak gepeng/acak-acakan */
+            min-width: 1024px; 
             box-sizing: border-box;
         }
         .header-title { 
@@ -81,7 +97,7 @@
         th, td { 
             border: 1px solid black; 
             padding: 6px; 
-            vertical-align: top; 
+            vertical-align: middle; 
             word-wrap: break-word;
         }
         th { font-weight: bold; background-color: #f9f9f9; font-size: 9pt; }
@@ -105,29 +121,18 @@
         .sign-box p { margin: 4px 0; }
         .sign-space { height: 80px; }
         
-        /* Utility */
         .text-left { text-align: left; }
 
-        /* --- RESPONSIVE MEDIA QUERIES (UNTUK HP & TABLET) --- */
+        @media print {
+            .no-print { display: none !important; }
+        }
+
         @media screen and (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-            .controls {
-                padding: 15px;
-            }
-            /* Ubah input form dari 2 kolom menjadi 1 kolom vertikal di HP */
-            .form-grid {
-                grid-template-columns: 1fr;
-                gap: 12px;
-            }
-            .controls button {
-                padding: 14px 20px;
-                font-size: 10pt;
-            }
-            /* Memberikan space informasi pengingat di layar HP */
+            body { padding: 10px; }
+            .controls { padding: 15px; }
+            .form-grid { grid-template-columns: 1fr; gap: 12px; }
             .preview-container::before {
-                content: "💡 Geser kanan-kiri untuk melihat pratinjau tabel penuh";
+                content: "?? Geser kanan-kiri untuk melihat pratinjau tabel penuh";
                 display: block;
                 padding: 8px 12px;
                 background: #e1f5fe;
@@ -147,7 +152,7 @@
         <div class="form-grid">
             <div class="form-group">
                 <label>Nama ASN / Petugas:</label>
-                <input type="text" id="inputAsnName" placeholder="Contoh: Muhammad haza, S.S" oninput="updateForm()">
+                <input type="text" id="inputAsnName" placeholder="Contoh: Muhammad Haza, S.S" oninput="updateForm()">
             </div>
             <div class="form-group">
                 <label>NIP:</label>
@@ -181,11 +186,13 @@
             <input type="file" id="fileUpload" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
         </div>
         
-        <button onclick="generatePDF()">Cetak / Download PDF</button>
+        <button class="btn-primary" onclick="generatePDF()">Cetak / Download PDF</button>
     </div>
 
     <div class="preview-container">
         <div class="printable-area" id="printableArea">
+            <button class="btn-secondary no-print" onclick="addNewManualRow()">+ Tambah Baris Manual</button>
+            
             <div class="header-title">
                 FORM VERIFIKASI KESOS 2026<br>
                 <span id="displayTriwulanTitle" style="font-size: 11pt;">TRIWULAN II</span>
@@ -194,7 +201,7 @@
                 <thead>
                     <tr>
                         <th rowspan="2" style="width:3%;">NO</th>
-                        <th rowspan="2" style="width:14%;">NAMA LANSIA/DISSABILITAS</th>
+                        <th rowspan="2" style="width:14%;">NAMA LANSIA/DISABILITAS</th>
                         <th rowspan="2" style="width:13%;">NIK</th>
                         <th rowspan="2" style="width:4%;">UMUR</th>
                         <th style="width:18%;" id="headerBulan1">APRIL</th>
@@ -202,6 +209,7 @@
                         <th style="width:18%;" id="headerBulan3">JUNI</th>
                         <th rowspan="2" style="width:6%;">DOKUMENTASI</th>
                         <th rowspan="2" style="width:6%;">NAMA PETUGAS</th>
+                        <th rowspan="2" class="no-print" style="width:4%;">AKSI</th>
                     </tr>
                     <tr>
                         <th>KEGIATAN PENDAMPINGAN PENGURUS</th>
@@ -223,7 +231,7 @@
                 </div>
                 <div class="sign-box"></div>
                 <div class="sign-box">
-                <br>
+                    <br>
                     <p><b id="displayTempatTanggal">PELEPAT, ....................</b></p>
                     <p><b>PENGURUS/PIHAK FASKES</b></p>
                     <div class="sign-space"></div>
@@ -234,23 +242,23 @@
     </div>
 
     <script>
-        // Data Kegiatan
+        // Data Kegiatan Standar
         const kegiatanOptions = [
             "",
             "Memeriksa Tekanan Darah",
-            "mengingatkan minum obat",
-            "membantu mandi",
-            "berpakaian dan makan",
-            "membantu menyiapkan makanan",
-            "mengawasi pola makan",
-            "mengingatkan waktu makan",
-            "mendampingi senam ringan atau peregangan",
-            "latihan gerak",
-            "membantu berjalan didalam rumah",
-            "pendampingan penggunaan alat bantu",
-            "membersihkan area tempat tidur dan kamar",
-            "menjaga rumah tetap aman dan nyaman",
-            "menata barang agar mudah dijangkau"
+            "Mengingatkan Minum Obat",
+            "Membantu Mandi",
+            "Berpakaian dan Makan",
+            "Membantu Menyiapkan Makanan",
+            "Mengawasi Pola Makan",
+            "Mengingatkan Waktu Makan",
+            "Mendampingi Senam Ringan / Peregangan",
+            "Latihan Gerak",
+            "Membantu Berjalan di Dalam Rumah",
+            "Pendampingan Penggunaan Alat Bantu",
+            "Membersihkan Area Tempat Tidur dan Kamar",
+            "Menjaga Rumah Tetap Aman dan Nyaman",
+            "Menata Barang Agar Mudah Dijangkau"
         ];
 
         function createDropdown() {
@@ -265,17 +273,35 @@
             return select.outerHTML;
         }
 
-        // Kalkulasi Umur
+        // Kalkulasi Umur Dari NIK (Indonesia NIK Standard)
         function calculateAge(nik) {
-            if (!nik || nik.toString().length < 16) return "";
-            let nikStr = nik.toString().trim();
-            let yy = parseInt(nikStr.substring(10, 12));
-            let birthYear = yy > 26 ? 1900 + yy : 2000 + yy;
-            let currentYear = 2026; 
-            return currentYear - birthYear;
+            nik = String(nik).replace(/\D/g, '');
+            if(nik.length < 12) return '';
+
+            let tgl = parseInt(nik.substring(6,8));
+            let bln = parseInt(nik.substring(8,10));
+            let thn = parseInt(nik.substring(10,12));
+
+            if(isNaN(tgl) || isNaN(bln) || isNaN(thn)) return '';
+
+            if(tgl > 40) tgl -= 40; // Untuk NIK Wanita
+
+            const tahunSekarang = new Date().getFullYear() % 100;
+            let tahunLahir = thn <= tahunSekarang ? 2000 + thn : 1900 + thn;
+
+            const today = new Date();
+            let umur = today.getFullYear() - tahunLahir;
+
+            const bulanNow = today.getMonth() + 1;
+            const tanggalNow = today.getDate();
+
+            if(bulanNow < bln || (bulanNow === bln && tanggalNow < tgl)) {
+                umur--;
+            }
+
+            return umur >= 0 ? umur : '';
         }
 
-        // --- UPDATE FUNGSI FORM (REALTIME) ---
         function updateForm() {
             const asnName = document.getElementById('inputAsnName').value;
             const nip = document.getElementById('inputNip').value;
@@ -292,14 +318,12 @@
             
             document.getElementById('displayPengurus').innerText = pengurus ? pengurus.toUpperCase() : "........................................";
 
-            // Auto-update NAMA PETUGAS di tabel
             const petugasCells = document.querySelectorAll('.petugas-cell');
             petugasCells.forEach(cell => {
                 cell.innerText = asnName ? asnName.toUpperCase() : "";
             });
         }
 
-        // Update Kolom Triwulan
         function updateTriwulan() {
             const tw = document.getElementById('inputTriwulan').value;
             const b1 = document.getElementById('headerBulan1');
@@ -313,7 +337,19 @@
             else if(tw === "4") { b1.innerText="OKTOBER"; b2.innerText="NOVEMBER"; b3.innerText="DESEMBER"; twTitle.innerText="TRIWULAN IV"; }
         }
 
-        // Menambah Baris
+        function reindexTable() {
+            const rows = tbody.querySelectorAll('tr');
+            rows.forEach((row, idx) => {
+                row.cells[0].innerText = idx + 1;
+            });
+        }
+
+        function deleteRow(btn) {
+            const row = btn.closest('tr');
+            row.remove();
+            reindexTable();
+        }
+
         function addRow(index, nama = "", nik = "") {
             let age = calculateAge(nik);
             let petugasName = document.getElementById('inputAsnName').value.toUpperCase();
@@ -321,16 +357,22 @@
             let tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${index}</td>
-                <td class="text-left">${nama}</td>
-                <td>${nik}</td>
+                <td class="text-left" contenteditable="true">${nama}</td>
+                <td contenteditable="true" onblur="this.parentElement.cells[3].innerText = calculateAge(this.innerText);">${nik}</td>
                 <td>${age}</td>
                 <td>${createDropdown()}</td>
                 <td>${createDropdown()}</td>
                 <td>${createDropdown()}</td>
                 <td></td>
                 <td class="petugas-cell">${petugasName}</td>
+                <td class="no-print"><button class="btn-danger" onclick="deleteRow(this)">Hapus</button></td>
             `;
             return tr;
+        }
+
+        function addNewManualRow() {
+            const index = tbody.children.length + 1;
+            tbody.appendChild(addRow(index));
         }
 
         const tbody = document.getElementById('tableBody');
@@ -342,7 +384,7 @@
         }
         initEmptyRows();
 
-        // Handle Excel/CSV
+        // Handle Import Excel/CSV
         document.getElementById('fileUpload').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -386,39 +428,88 @@
 
         // Export PDF
         function generatePDF() {
-            const selects = document.querySelectorAll('#printableArea select');
-            const originalSelects = [];
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4');
 
-            selects.forEach(select => {
-                const span = document.createElement('span');
-                span.textContent = select.value;
-                span.style.fontSize = '8pt';
-                span.style.textAlign = 'left';
-                span.style.display = 'block';
-                originalSelects.push({ parent: select.parentNode, el: select });
-                select.parentNode.replaceChild(span, select);
-            });
+            const tempat = document.getElementById('inputTempat').value || "........";
+            const tanggal = document.getElementById('inputTanggal').value || "....................";
+            const asnName = document.getElementById('inputAsnName').value || "........................................";
+            const nip = document.getElementById('inputNip').value || "..................................";
+            const pengurus = document.getElementById('inputPengurus').value || "........................................";
+            const twTitle = document.getElementById('displayTriwulanTitle').innerText;
 
-            const element = document.getElementById('printableArea');
-            const opt = {
-                margin:       [10, 5, 10, 5],
-                filename:     'Form_Verifikasi_Kesos_2026.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
-            };
+            doc.setFontSize(11)
+               .setFont(undefined, 'bold')
+               .text("FORM VERIFIKASI KESOS 2026", 148, 12, { align: "center" });
 
-            html2pdf().set(opt).from(element).save().then(() => {
-                // Restore elements
-                for(let i=0; i<originalSelects.length; i++){
-                    let replacedNode = originalSelects[i].parent.querySelector('span');
-                    if(replacedNode) {
-                        originalSelects[i].parent.replaceChild(originalSelects[i].el, replacedNode);
+            doc.setFontSize(10)
+               .setFont(undefined, 'normal')
+               .text(twTitle, 148, 17, { align: "center" });
+
+            doc.autoTable({
+                html: '#dataTable',
+                startY: 22,
+                theme: 'grid',
+                // Abaikan kolom 'AKSI' (kolom terakhir) pada output PDF
+                columns: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+                didParseCell: function(data) {
+                    if (data.section === 'body') {
+                        const rawCell = data.cell.raw;
+                        if (rawCell) {
+                            const select = rawCell.querySelector('select');
+                            if (select) {
+                                // Ambil teks opsi yang sedang terpilih saja
+                                data.cell.text = [select.value];
+                            }
+                        }
                     }
-                }
+                },
+                headStyles: {
+                    fontSize: 8,
+                    fillColor: [249, 249, 249],
+                    textColor: [0, 0, 0],
+                    lineColor: [0, 0, 0],
+                    lineWidth: 0.1,
+                    halign: 'center',
+                    valign: 'middle'
+                },
+                styles: {
+                    fontSize: 8,
+                    cellPadding: 2,
+                    lineColor: [0, 0, 0],
+                    lineWidth: 0.1,
+                    halign: 'center',
+                    valign: 'middle'
+                },
+                margin: { bottom: 45 }
             });
+
+            const totalPages = doc.internal.getNumberOfPages();
+            doc.setPage(totalPages);
+
+            let finalY = doc.lastAutoTable.finalY + 10;
+            if(finalY > 150) {
+                doc.addPage();
+                finalY = 20;
+            }
+
+            doc.setFontSize(9);
+            
+            // Tanda Tangan Kiri (ASN PPPK)
+            doc.setFont(undefined, 'bold');
+            doc.text("ASN PPPK KEMENSOS", 25, finalY + 5);
+            doc.text(asnName.toUpperCase(), 25, finalY + 30);
+            doc.setFont(undefined, 'normal');
+            doc.text(`NIP. ${nip}`, 25, finalY + 35);
+
+            // Tanda Tangan Kanan (Pengurus / Faskes)
+            doc.setFont(undefined, 'bold');
+            doc.text(`${tempat.toUpperCase()}, ${tanggal}`, 200, finalY + 5, { align: 'left' });
+            doc.text("PENGURUS/PIHAK FASKES", 200, finalY + 10, { align: 'left' });
+            doc.text(pengurus.toUpperCase(), 200, finalY + 30, { align: 'left' });
+
+            doc.save(`Form_Verifikasi_Kesos_2026_${twTitle.replace(" ", "_")}.pdf`);
         }
     </script>
-    <script src="../tombol-kembali.js"></script>
 </body>
 </html>
