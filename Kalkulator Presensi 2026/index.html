@@ -39,7 +39,7 @@
             width: 100%;
             max-width: 1100px;
             display: grid;
-            grid-template-columns: repeat(3, 1fr); 
+            grid-template-columns: repeat(2, 1fr); 
             gap: 20px;
         }
 
@@ -107,29 +107,13 @@
             outline: none;
         }
 
-        /* Numpad Grid */
-        .numpad { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 10px; 
-        }
-        
-        .numpad button { 
+        .btn-calc { 
             width: 100%;
-            padding: 15px 5px; 
-            font-size: 1.2rem; 
-            font-weight: bold; 
-            border: 1px solid #eee; 
-            border-radius: 8px; 
-            background: #fff; 
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 8px;
             cursor: pointer;
             transition: background 0.2s;
-        }
-
-        .numpad button:active { background: #f0f0f0; }
-
-        .btn-calc { 
-            grid-column: span 3; 
             background: var(--success) !important; 
             color: white; 
             border: none !important; 
@@ -167,40 +151,21 @@
         <div class="card-content" id="content-input">
             <div class="input-group">
                 <label>Total Hari Efektif</label>
-                <input type="number" id="totalHari" readonly placeholder="Klik di sini" onclick="switchInput('totalHari')">
+                <input type="number" id="totalHari" placeholder="Masukkan total hari" onclick="switchInput('totalHari')">
             </div>
             <div class="input-group">
                 <label>Jumlah Hari Hadir</label>
-                <input type="number" id="hadir" readonly placeholder="Klik di sini" onclick="switchInput('hadir')">
+                <input type="number" id="hadir" placeholder="Masukkan jumlah hadir" onclick="switchInput('hadir')">
             </div>
-            <div id="quickResult" style="text-align:center; font-weight:bold; color:var(--success); min-height: 20px;"></div>
-            
+            <button class="btn-calc" onclick="calculate()">HITUNG PERSENTASE</button>
+            <div id="quickResult" style="text-align:center; font-weight:bold; color:var(--success); min-height: 20px; margin-top: 15px;"></div>
         </div>
     </div>
 
     <!-- KOLOM 2 -->
     <div class="card">
         <div class="card-header" onclick="toggleCard(this)">
-            <span>2. Tombol Angka</span>
-            <div class="arrow up"></div>
-        </div>
-        <div class="card-content" id="content-numpad">
-            <div class="numpad">
-                
-                <button class="btn-calc" onclick="calculate()">HITUNG PERSENTASE</button>
-                <button onclick="press(7)">7</button><button onclick="press(8)">8</button><button onclick="press(9)">9</button>
-                <button onclick="press(4)">4</button><button onclick="press(5)">5</button><button onclick="press(6)">6</button>
-                <button onclick="press(1)">1</button><button onclick="press(2)">2</button><button onclick="press(3)">3</button>
-                <button onclick="clearAll()" style="color:#dc3545">C</button><button onclick="press(0)">0</button><button onclick="backspace()">←</button>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- KOLOM 3 -->
-    <div class="card">
-        <div class="card-header" onclick="toggleCard(this)">
-            <span>3. Riwayat</span>
+            <span>2. Riwayat</span>
             <div class="arrow"></div>
         </div>
         <div class="card-content collapsed" id="content-history" style="display: none;">
@@ -233,21 +198,6 @@
         document.getElementById('hadir').classList.remove('active');
         currentInput = id;
         document.getElementById(id).classList.add('active');
-    }
-
-    function press(num) {
-        document.getElementById(currentInput).value += num;
-    }
-
-    function backspace() {
-        const input = document.getElementById(currentInput);
-        input.value = input.value.slice(0, -1);
-    }
-
-    function clearAll() {
-        document.getElementById('totalHari').value = '';
-        document.getElementById('hadir').value = '';
-        document.getElementById('quickResult').innerText = '';
     }
 
     function calculate() {
