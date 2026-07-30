@@ -21,7 +21,7 @@ const affiliateProducts = [
 const ROTATION_INTERVAL = 5000; 
 
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. Buat kontainer utama
+    // 1. Buat kontainer utama (Kartu Melayang)
     const container = document.createElement("div");
     container.id = "shopee-affiliate-float";
     
@@ -36,31 +36,10 @@ document.addEventListener("DOMContentLoaded", () => {
         fontFamily: "'Segoe UI', Roboto, sans-serif",
         zIndex: "99999",
         overflow: "hidden",
-        border: "1px solid #e0e0e0",
-        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+        border: "1px solid #e0e0e0"
     });
 
-    // 2. Buat Header Widget
-    const header = document.createElement("div");
-    Object.assign(header.style, {
-        backgroundColor: "#ee4d2d",
-        color: "#ffffff",
-        padding: "10px 14px",
-        fontSize: "13px",
-        fontWeight: "bold",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        cursor: "pointer",
-        userSelect: "none"
-    });
-    header.innerHTML = `
-        🧡 Rekomendasi Spesial
-        [Sembunyikan]
-    `;
-    container.appendChild(header);
-
-    // 3. Buat Container untuk 1 Produk
+    // 2. Buat Elemen Kartu Produk (Tanpa Header)
     const singleProductCard = document.createElement("a");
     singleProductCard.id = "float-product-card";
     singleProductCard.target = "_blank";
@@ -77,22 +56,22 @@ document.addEventListener("DOMContentLoaded", () => {
     singleProductCard.onmouseenter = () => singleProductCard.style.backgroundColor = "#fef6f4";
     singleProductCard.onmouseleave = () => singleProductCard.style.backgroundColor = "transparent";
 
-    // Elemen internal produk
+    // Isi elemen dalam kartu produk
     singleProductCard.innerHTML = `
-        
-        
-        Beli
+        <img id="float-prod-img" src="" alt="" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px; margin-right: 12px; border: 1px solid #eee; flex-shrink: 0;">
+        <div style="flex-grow: 1; font-size: 13px; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;" id="float-prod-name"></div>
+        <span style="background-color: #ee4d2d; color: white; font-size: 11px; padding: 6px 10px; border-radius: 6px; font-weight: bold; margin-left: 8px; white-space: nowrap; flex-shrink: 0;">Beli</span>
     `;
+    
     container.appendChild(singleProductCard);
     document.body.appendChild(container);
 
-    // 4. Logika Pemilihan Acak & Rotasi
+    // 3. Logika Rotasi Produk Acak
     let currentIndex = -1;
 
     function renderRandomProduct() {
         if (affiliateProducts.length === 0) return;
 
-        // Pilih indeks acak yang berbeda dari produk yang sedang tampil
         let newIndex;
         if (affiliateProducts.length > 1) {
             do {
@@ -105,7 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const prod = affiliateProducts[currentIndex];
 
-        // Efek transisi pudar (fade out -> update -> fade in)
+        // Transisi Halus (Fade Out -> Fade In)
         singleProductCard.style.opacity = "0";
         setTimeout(() => {
             singleProductCard.href = prod.link;
@@ -116,32 +95,15 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 300);
     }
 
-    // Tampilkan pertama kali
+    // Jalankan pertama kali
     renderRandomProduct();
 
-    // Jalankan timer rotasi otomatis
+    // Timer Rotasi Otomatis
     let rotationTimer = setInterval(renderRandomProduct, ROTATION_INTERVAL);
 
-    // Pause rotasi saat mouse berada di atas produk (agar nyaman diklik pengguna)
+    // Jeda rotasi saat mouse diarahkan ke kartu produk
     singleProductCard.addEventListener("mouseenter", () => clearInterval(rotationTimer));
     singleProductCard.addEventListener("mouseleave", () => {
         rotationTimer = setInterval(renderRandomProduct, ROTATION_INTERVAL);
-    });
-
-    // 5. Fitur Minimize / Toggle
-    let isOpen = true;
-    const toggleBtn = header.querySelector("#float-toggle-btn");
-    
-    header.addEventListener("click", () => {
-        if (isOpen) {
-            singleProductCard.style.display = "none";
-            toggleBtn.innerText = "[Tampilkan]";
-            container.style.width = "200px";
-        } else {
-            singleProductCard.style.display = "flex";
-            toggleBtn.innerText = "[Sembunyikan]";
-            container.style.width = "280px";
-        }
-        isOpen = !isOpen;
     });
 });
