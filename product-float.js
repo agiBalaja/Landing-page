@@ -1,19 +1,19 @@
 // Data produk Shopee Affiliate Anda
 const affiliateProducts = [
     {
-        name: "Mechanical Keyboard RGB",
-        image: "https://cf.shopee.sg/file/id-11134216-81ztj-mf0po1rrot1o8a", // Ganti URL gambar produk
-        link: "https://s.shopee.co.id/6L3Fmi1C5H" // Ganti dengan link affiliate Anda
+        name: "Rubtrack R-05 Sepatu Gunung",
+        image: "https://down-tx-id.img.susercontent.com/id-11134207-8224u-mhfp919kd4i6b9.webp", // Ganti URL gambar produk
+        link: "https://s.shopee.co.id/3B6E1XWQTf" // Ganti dengan link affiliate Anda
     },
     {
-        name: "Mouse Gaming Wireless",
-        image: "https://unsplash.com",
-        link: "https://shope.ee"
+        name: "Kaos Lengan HUT RI ",
+        image: "https://down-tx-id.img.susercontent.com/id-11134207-822wk-mp1oxb62thj41a.webp",
+        link: "https://s.shopee.co.id/8pkalloPyB"
     },
     {
-        name: "Stand Laptop Aluminium",
-        image: "https://unsplash.com",
-        link: "https://shope.ee"
+        name: "Topi Rimba Mountchild Hiking",
+        image: "https://down-tx-id.img.susercontent.com/id-11134207-8224t-migyopadp2x3db.webp",
+        link: "https://s.shopee.co.id/AAFyMLKO2X"
     }
 ];
 
