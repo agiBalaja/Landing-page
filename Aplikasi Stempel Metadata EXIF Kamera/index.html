@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplikasi Stempel Metadata EXIF Kamera</title>
+  <!-- Leaflet CSS for Maps -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --border: #e2e8f0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      padding: 20px;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    @media (min-width: 900px) {
+      .container {
+        grid-template-columns: 350px 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      border: 1px solid var(--border);
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      color: var(--primary);
+    }
+
+    h2 {
+      font-size: 1.1rem;
+      margin-bottom: 12px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+
+    button {
+      width: 100%;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background-color: var(--primary-hover);
+    }
+
+    button:disabled {
+      background-color: #94a3b8;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background-color: #059669;
+      margin-top: 8px;
+    }
+
+    .btn-secondary:hover {
+      background-color: #047857;
+    }
+
+    #map {
+      height: 250px;
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      margin-top: 5px;
+    }
+
+    .preview-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+      background: #f1f5f9;
+      border-radius: 8px;
+      border: 2px dashed var(--border);
+      position: relative;
+      overflow: hidden;
+      padding: 10px;
+    }
+
+    canvas {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+    }
+
+    .coords-badge {
+      background: #eff6ff;
+      color: #1e40af;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      margin-top: 5px;
+      border: 1px solid #bfdbfe;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Panel Kontrol (Kiri) -->
+    <div class="card">
+      <h1>Stempel Metadata EXIF</h1>
+
+      <!-- 1. Form Upload -->
+      <div class="form-group">
+        <label for="imageInput">1. Upload Gambar (Format JPG/JPEG)</label>
+        <input type="file" id="imageInput" accept="image/jpeg, image/jpg">
+      </div>
+
+      <!-- 2. Peta Tempat Memilih Titik Koordinat -->
+      <div class="form-group">
+        <label>2. Pilih Lokasi / Titik di Peta</label>
+        <div id="map"></div>
+        <!-- TOMBOL MY LOCATION -->
+        <button id="locBtn" type="button" class="btn-secondary">🎯 Lokasi Saya (My Location)</button>
+        <div class="coords-badge" id="coordsDisplay">
+          Lat: -1.732092, Lng: 102.139153
+        </div>
+      </div>
+
+      <!-- 3. Tombol Unduh -->
+      <button id="downloadBtn" disabled>3. Unduh Gambar + Meta EXIF</button>
+    </div>
+
+    <!-- Area Preview Hasil (Kanan) -->
+    <div class="card" style="display: flex; flex-direction: column;">
+      <h2>Preview Gambar Hasil (Metadata Tersimpan di File)</h2>
+      <div class="preview-area" id="previewContainer">
+        <p style="color: #64748b;" id="placeholderText">Silakan upload gambar terlebih dahulu</p>
+        <canvas id="outputCanvas" style="display: none;"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaflet JS for Maps -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Piexifjs for Exif/GPS Metadata Injection -->
+  <script src="https://cdn.jsdelivr.net/npm/piexifjs@1.0.6/piexif.min.js"></script>
+  <script>
+    // State variables (Default koordinat awal)
+    let selectedLat = -1.732092;
+    let selectedLng = 102.139153;
+    let uploadedImage = null;
+    let rawOriginalBase64 = null;
+
+    // Elements
+    const imageInput = document.getElementById('imageInput');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const locBtn = document.getElementById('locBtn');
+    const canvas = document.getElementById('outputCanvas');
+    const ctx = canvas.getContext('2d');
+    const placeholderText = document.getElementById('placeholderText');
+    const coordsDisplay = document.getElementById('coordsDisplay');
+
+    // ===================================================
+    // METADATA DEFAULT (SPESIFIKASI KAMERA)
+    // ===================================================
+    const DEFAULT_META = {
+      make: "samsung",
+      model: "SM-A045F",
+      orientation: 1, // Normal Horizontal
+      fNumber: [18, 10], // 1.8
+      exposureTime: [4, 100], // 0.04 s
+      iso: 500,
+      exposureBias: [0, 10], // 0
+      focalLength: [421, 100], // 4.21 mm
+      focalLengthIn35mm: 25,
+      flash: 0, // Flash did not fire
+      whiteBalance: 0, // Auto
+      meteringMode: 2, // CenterWeightedAverage
+    };
+
+    // Initialize Map dengan titik default
+    const map = L.map('map').setView([selectedLat, selectedLng], 15);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    let marker = L.marker([selectedLat, selectedLng], { draggable: true }).addTo(map);
+
+    function updateCoords(lat, lng) {
+      selectedLat = lat;
+      selectedLng = lng;
+      coordsDisplay.innerText = `Lat: ${selectedLat.toFixed(6)}, Lng: ${selectedLng.toFixed(6)}`;
+      drawStampedImage();
+    }
+
+    map.on('click', function(e) {
+      const { lat, lng } = e.latlng;
+      marker.setLatLng([lat, lng]);
+      updateCoords(lat, lng);
+    });
+
+    marker.on('dragend', function(e) {
+      const position = marker.getLatLng();
+      updateCoords(position.lat, position.lng);
+    });
+
+    // FITUR: TOMBOL MY LOCATION
+    locBtn.addEventListener('click', function() {
+      if ("geolocation" in navigator) {
+        locBtn.innerText = "⏳ Mendeteksi lokasi...";
+        navigator.geolocation.getCurrentPosition(
+          function(position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            map.setView([lat, lng], 16);
+            marker.setLatLng([lat, lng]);
+            updateCoords(lat, lng);
+            locBtn.innerText = "🎯 Lokasi Saya (My Location)";
+          },
+          function(error) {
+            alert("Gagal mengambil lokasi. Pastikan GPS/izin lokasi di browser aktif.");
+            locBtn.innerText = "🎯 Lokasi Saya (My Location)";
+          },
+          { enableHighAccuracy: true }
+        );
+      } else {
+        alert("Browser Anda tidak mendukung Geolocation.");
+      }
+    });
+
+    // 1. FITUR UPLOAD GAMBAR
+    imageInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        rawOriginalBase64 = event.target.result;
+        const img = new Image();
+        img.onload = function() {
+          uploadedImage = img;
+          downloadBtn.disabled = false;
+          placeholderText.style.display = 'none';
+          canvas.style.display = 'block';
+          drawStampedImage();
+        };
+        img.src = rawOriginalBase64;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function drawStampedImage() {
+      if (!uploadedImage) return;
+
+      canvas.width = uploadedImage.naturalWidth;
+      canvas.height = uploadedImage.naturalHeight;
+      ctx.drawImage(uploadedImage, 0, 0);
+    }
+
+    // Helper Konversi Desimal Lat/Lng ke Format EXIF GPS
+    function degToExifFormat(deg) {
+      const absolute = Math.abs(deg);
+      const degrees = Math.floor(absolute);
+      const minutesNotTruncated = (absolute - degrees) * 60;
+      const minutes = Math.floor(minutesNotTruncated);
+      const seconds = Math.floor((minutesNotTruncated - minutes) * 60 * 100);
+
+      return [[degrees, 1], [minutes, 1], [seconds, 100]];
+    }
+
+    // HELPER: Mengambil Waktu Realtime & Format EXIF + Nama File
+    function getRealtimeDateTime() {
+      const now = new Date();
+      
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+
+      return {
+        // Format EXIF: YYYY:MM:DD HH:MM:SS
+        exifString: `${year}:${month}:${day} ${hours}:${minutes}:${seconds}`,
+        // Format Nama File: YYYYMMDD_HHMMSS
+        filenameString: `${year}${month}${day}_${hours}${minutes}${seconds}`
+      };
+    }
+
+    // 3. UNDUH DENGAN WAKTU REALTIME & NAMA FILE DINAMIS
+    downloadBtn.addEventListener('click', function() {
+      if (!uploadedImage || !rawOriginalBase64) return;
+
+      const timeData = getRealtimeDateTime(); // Ambil waktu realtime saat diklik
+      const jpegDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+      
+      let exifObj = { "0th": {}, "Exif": {}, "GPS": {} };
+
+      try {
+        exifObj = piexif.load(rawOriginalBase64);
+      } catch (err) {
+        console.log("Membuat struktur EXIF baru...");
+      }
+
+      if (!exifObj["0th"]) exifObj["0th"] = {};
+      if (!exifObj["Exif"]) exifObj["Exif"] = {};
+      if (!exifObj["GPS"]) exifObj["GPS"] = {};
+
+      // 1. INJEKSI PERANGKAT & WAKTU REALTIME (0th IFD)
+      exifObj["0th"][piexif.ImageIFD.Make] = DEFAULT_META.make;
+      exifObj["0th"][piexif.ImageIFD.Model] = DEFAULT_META.model;
+      exifObj["0th"][piexif.ImageIFD.DateTime] = timeData.exifString; // Realtime
+      exifObj["0th"][piexif.ImageIFD.Orientation] = DEFAULT_META.orientation;
+
+      // 2. INJEKSI SPESIFIKASI KAMERA & EXPOSURE (Exif IFD)
+      exifObj["Exif"][piexif.ExifIFD.DateTimeOriginal] = timeData.exifString; // Realtime
+      exifObj["Exif"][piexif.ExifIFD.DateTimeDigitized] = timeData.exifString; // Realtime
+      exifObj["Exif"][piexif.ExifIFD.FNumber] = DEFAULT_META.fNumber;
+      exifObj["Exif"][piexif.ExifIFD.ApertureValue] = DEFAULT_META.fNumber;
+      exifObj["Exif"][piexif.ExifIFD.ExposureTime] = DEFAULT_META.exposureTime;
+      exifObj["Exif"][piexif.ExifIFD.ISOSpeedRatings] = DEFAULT_META.iso;
+      exifObj["Exif"][piexif.ExifIFD.ExposureBiasValue] = DEFAULT_META.exposureBias;
+      exifObj["Exif"][piexif.ExifIFD.FocalLength] = DEFAULT_META.focalLength;
+      exifObj["Exif"][piexif.ExifIFD.FocalLengthIn35mmFilm] = DEFAULT_META.focalLengthIn35mm;
+      exifObj["Exif"][piexif.ExifIFD.Flash] = DEFAULT_META.flash;
+      exifObj["Exif"][piexif.ExifIFD.WhiteBalance] = DEFAULT_META.whiteBalance;
+      exifObj["Exif"][piexif.ExifIFD.MeteringMode] = DEFAULT_META.meteringMode;
+
+      // 3. INJEKSI METADATA GPS (Sesuai Pilihan User di Peta)
+      const latRef = selectedLat >= 0 ? 'N' : 'S';
+      const lngRef = selectedLng >= 0 ? 'E' : 'W';
+
+      exifObj["GPS"][piexif.GPSIFD.GPSLatitudeRef] = latRef;
+      exifObj["GPS"][piexif.GPSIFD.GPSLatitude] = degToExifFormat(selectedLat);
+      exifObj["GPS"][piexif.GPSIFD.GPSLongitudeRef] = lngRef;
+      exifObj["GPS"][piexif.GPSIFD.GPSLongitude] = degToExifFormat(selectedLng);
+
+      // Sisipkan EXIF ke JPEG
+      const exifBytes = piexif.dump(exifObj);
+      const finalJpegDataUrl = piexif.insert(exifBytes, jpegDataUrl);
+
+      // Download File dengan nama yang menyesuaikan waktu realtime
+      const link = document.createElement('a');
+      link.download = `${timeData.filenameString}_meta.jpg`;
+      link.href = finalJpegDataUrl;
+      link.click();
+    });
+  </script>
+</body>
+</html>
