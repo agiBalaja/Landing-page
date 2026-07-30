@@ -243,23 +243,29 @@
 
                     const tanggal = `${day}/${monthNum}/${year}`;
 
+                    // Pembersihan string spasi di awal pada kolom JENIS
+                    const jenisCleaned = (keterangan || '').toString().replace(/^\s+/, '');
+
                     if (datang && datang.toString().trim() !== '') {
                         outputRows.push({
                             NIP: nip,
                             TANGGAL: tanggal,
                             KATEGORI: 'Masuk',
-                            JENIS: keterangan || '',
-                            WAKTU: datang,
+                            JENIS: jenisCleaned,
+                            WAKTU: datang.toString().trim(),
                             KETERANGAN: ''
                         });
                     }
                     if (pulang && pulang.toString().trim() !== '') {
+                        // Menghapus spasi/leading space sebelum jam pulang
+                        const pulangCleaned = pulang.toString().trim();
+
                         outputRows.push({
                             NIP: nip,
                             TANGGAL: tanggal,
                             KATEGORI: 'Pulang',
-                            JENIS: keterangan || '',
-                            WAKTU: pulang,
+                            JENIS: jenisCleaned,
+                            WAKTU: pulangCleaned,
                             KETERANGAN: ''
                         });
                     }
