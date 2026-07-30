@@ -14,6 +14,66 @@ const affiliateProducts = [
         name: "Topi Rimba Mountchild Hiking",
         image: "https://down-tx-id.img.susercontent.com/id-11134207-8224t-migyopadp2x3db.webp",
         link: "https://s.shopee.co.id/AAFyMLKO2X"
+    },
+    {
+        name: "V380 Pro Kamera Dual Lens",
+        image: "https://down-tx-id.img.susercontent.com/id-11134207-81zth-mq47tkp1qhhpdf.webp",
+        link: "https://s.shopee.co.id/4LIBRD2Bqf"
+    },
+    {
+        name: "Sepatu Lari Pria Wanita",
+        image: "https://down-bs-id.img.susercontent.com/id-11134207-7ra0s-mctr45tbbiuf23.webp",
+        link: "https://s.shopee.co.id/6VMg1N8TLT"
+    },
+    {
+        name: "Bendera Indonesia",
+        image: "https://down-bs-id.img.susercontent.com/id-11134207-822wi-moaif47y8m4u6c.webp",
+        link: "https://s.shopee.co.id/gOt4pKFro"
+    },
+    {
+        name: "Tumbler Cangkir Termos Motif",
+        image: "https://down-bs-id.img.susercontent.com/id-11134207-822wj-mojpkkuik07f1c.webp",
+        link: "https://s.shopee.co.id/AAFyOQ7bEX"
+    },
+    {
+        name: "Kasur Spring Bed IDEAL",
+        image: "https://down-bs-id.img.susercontent.com/id-11134207-81zte-mq65hwx16zv0f8.webp",
+        link: "https://s.shopee.co.id/70Iwcerdn1"
+    },
+    {
+        name: "Jaket Olahraga",
+        image: "https://down-bs-id.img.susercontent.com/id-11134207-822wt-mny65aeqi13448.webp",
+        link: "https://s.shopee.co.id/5LAidg9RLF"
+    },
+    {
+        name: "Helm Bogo Retro",
+        image: "https://down-bs-id.img.susercontent.com/id-11134207-8224q-mkx9ypjf1vcwa3.webp",
+        link: "https://s.shopee.co.id/2VqXGZ9xvf"
+    },
+    {
+        name: "Xiaomi Redmi 15C 5G",
+        image: "https://down-bs-id.img.susercontent.com/id-11134207-81ztl-mqivlvpwm22oe3.webp",
+        link: "https://s.shopee.co.id/5ArIRWJqPf"
+    },
+    {
+        name: "Proyektor Mini Portable",
+        image: "https://down-bs-id.img.susercontent.com/id-11134207-7rbk8-m75w2iujh5r5a8.webp",
+        link: "https://s.shopee.co.id/30mnrbYepe"
+    },
+    {
+        name: "Jet Cleaner Tekanan Tinggi",
+        image: "https://down-bs-id.img.susercontent.com/id-11134207-822wn-mphok98ztx4w34.webp",
+        link: "https://s.shopee.co.id/5VU8qH2Uro"
+    },
+    {
+        name: "Nokia 130 2023 Dual SIM",
+        image: "https://down-bs-id.img.susercontent.com/id-11134207-81zto-mq36ndjc6o7i28.webp",
+        link: "https://s.shopee.co.id/8fRAc9wrwa"
+    },
+    {
+        name: "Korean Top Baju Knit",
+        image: "https://down-bs-id.img.susercontent.com/id-11134207-8224x-ml1w3zspenlu1f.webp",
+        link: "https://s.shopee.co.id/19CISb8Ce"
     }
 ];
 
@@ -27,8 +87,8 @@ document.addEventListener("DOMContentLoaded", () => {
     
     Object.assign(container.style, {
         position: "fixed",
-        bottom: "20px",
-        right: "20px",
+        bottom: "10px",
+        right: "10px",
         width: "280px",
         backgroundColor: "#ffffff",
         boxShadow: "0px 4px 15px rgba(0,0,0,0.15)",
