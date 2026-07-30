@@ -2,8 +2,8 @@
 const affiliateProducts = [
     {
         name: "Mechanical Keyboard RGB",
-        image: "https://unsplash.com", // Ganti URL gambar produk
-        link: "https://shope.ee" // Ganti dengan link affiliate Anda
+        image: "https://cf.shopee.sg/file/id-11134216-81ztj-mf0po1rrot1o8a", // Ganti URL gambar produk
+        link: "https://s.shopee.co.id/6L3Fmi1C5H" // Ganti dengan link affiliate Anda
     },
     {
         name: "Mouse Gaming Wireless",
