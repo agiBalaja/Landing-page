@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Scan Dokumen Web</title>
+    <title>AI Document Scanner Pro</title>
+    <!-- Bootstrap 5 & Cropper.js CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DV25BYV3TL"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -12,87 +17,179 @@
 
   gtag('config', 'G-DV25BYV3TL');
 </script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+    
     <style>
-        body { background: linear-gradient(to bottom, #87CEEB, #4682B4); padding: 20px; }
-        .container { max-width: 900px; background: white; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.1); padding: 25px; }
-        #video-container { position: relative; width: 100%; background: #000; border-radius: 8px; overflow: hidden; margin-bottom: 15px; }
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --accent-color: #6366f1;
+            --accent-hover: #4f46e5;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: #f8fafc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            padding: 30px 15px;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            padding: 30px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Overlay Frame & Laser Animation */
+        #video-container {
+            position: relative;
+            width: 100%;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
         #video { width: 100%; display: block; }
-        .cropper-container { max-height: 400px; margin-bottom: 15px; }
-        #image-preview { max-width: 100%; display: block; }
-        .btn-group-action { margin: 10px 0; display: flex; gap: 8px; flex-wrap: wrap; }
-        .result-canvas { width: 100%; border: 2px solid #dee2e6; border-radius: 8px; background: #fff; margin-top: 15px; }
-        .slider-container { display: flex; align-items: center; gap: 15px; margin-top: 15px; }
-        .slider-label { min-width: 100px; }
-        footer { margin-top: 20px; text-align: center; color: #6c757d; }
-        .toast-notif { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 30px; font-size: 14px; z-index: 9999; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
-        .toast-notif.show { opacity: 1; }
-        .error-message { color: #dc3545; font-size: 0.9rem; margin-top: 10px; text-align: center; }
+
+        .scan-overlay {
+            position: absolute;
+            top: 10%; left: 10%; right: 10%; bottom: 10%;
+            border: 2px dashed rgba(255, 255, 255, 0.6);
+            border-radius: 8px;
+            pointer-events: none;
+        }
+
+        .scanner-line {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 3px;
+            background: linear-gradient(90deg, transparent, #38bdf8, transparent);
+            box-shadow: 0 0 15px #38bdf8;
+            display: none;
+            animation: scanAnimation 2s infinite ease-in-out;
+        }
+
+        @keyframes scanAnimation {
+            0% { top: 0%; }
+            50% { top: 98%; }
+            100% { top: 0%; }
+        }
+
+        /* Styling Form Control & Button */
+        .btn-custom-primary {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+        }
+        .btn-custom-primary:hover {
+            background-color: var(--accent-hover);
+            color: white;
+        }
+        
+        .cropper-container { max-height: 450px; margin-bottom: 15px; }
+        .page-badge { font-size: 0.9rem; margin-right: 8px; }
+        .result-canvas { width: 100%; border-radius: 8px; background: #fff; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1 class="text-center mb-4">📄 Aplikasi Scan Dokumen</h1>
-        <p class="text-muted text-center">Gunakan kamera atau unggah gambar untuk memindai dokumen.</p>
 
-        <div class="btn-group mb-3 w-100" role="group">
-            <button class="btn btn-outline-primary" id="btn-camera-mode">📷 Gunakan Kamera</button>
-            <button class="btn btn-outline-success" id="btn-upload-mode">🖼️ Unggah Gambar</button>
+    <div class="glass-card">
+        <h2 class="text-center fw-bold mb-1"><i class="fa-solid fa-wand-magic-sparkles text-primary"></i> AI Document Scanner Pro</h2>
+        <p class="text-center text-light opacity-75 mb-4">Pindai dokumen, tingkatkan kualitas gambar, dan ekstrak teks secara instan.</p>
+
+        <!-- Mode Selection -->
+        <div class="btn-group w-100 mb-4" role="group">
+            <button class="btn btn-outline-light py-2" id="btn-camera-mode"><i class="fa-solid fa-camera me-2"></i> Kamera</button>
+            <button class="btn btn-outline-light py-2" id="btn-upload-mode"><i class="fa-solid fa-file-arrow-up me-2"></i> Unggah File</button>
         </div>
 
+        <!-- Camera Section -->
         <div id="camera-section" style="display: none;">
             <div id="video-container">
                 <video id="video" autoplay playsinline></video>
+                <div class="scan-overlay"></div>
+                <div class="scanner-line" id="scanner-line"></div>
             </div>
-            <div class="btn-group-action mb-3">
-                <button class="btn btn-primary flex-grow-1" id="btn-capture" disabled>📸 Ambil Gambar</button>
-                <button class="btn btn-warning" id="btn-switch-camera" title="Ganti Kamera">🔄 Putar Kamera</button>
+            <div class="d-flex gap-2 mt-3">
+                <button class="btn btn-custom-primary flex-grow-1" id="btn-capture" disabled><i class="fa-solid fa-circle-dot me-2"></i> Ambil Gambar</button>
+                <button class="btn btn-secondary" id="btn-switch-camera"><i class="fa-solid fa-arrows-rotate"></i></button>
             </div>
-            <div id="camera-error-msg" class="error-message"></div>
         </div>
 
+        <!-- Upload Section -->
         <div id="upload-section" style="display: none;">
-            <input type="file" id="file-input" accept="image/*" class="form-control">
+            <input type="file" id="file-input" accept="image/*" class="form-control form-control-lg bg-dark text-light border-secondary">
         </div>
 
-        <div class="mt-3" id="crop-container" style="display: none;">
-            <h5>Atur Area Dokumen:</h5>
+        <!-- Crop Section -->
+        <div class="mt-4" id="crop-container" style="display: none;">
+            <h5 class="mb-3"><i class="fa-solid fa-crop-simple me-2"></i> Atur Area Dokumen:</h5>
             <div class="cropper-container">
                 <img id="image-preview" src="" alt="Preview">
             </div>
-            <div class="btn-group-action">
-                <button class="btn btn-success" id="btn-scan">🔍 Proses Scan</button>
-                <button class="btn btn-secondary" id="btn-reset-crop">↻ Reset Crop</button>
+            <div class="d-flex gap-2">
+                <button class="btn btn-success flex-grow-1" id="btn-scan"><i class="fa-solid fa-bolt me-2"></i> Proses Dokumen</button>
+                <button class="btn btn-outline-light" id="btn-reset-crop">Reset</button>
             </div>
         </div>
 
-        <div id="result-section" style="display: none;">
-            <h5>Hasil Scan:</h5>
-            <canvas id="result-canvas" class="result-canvas"></canvas>
-            <div class="slider-container">
-                <span class="slider-label">Threshold: <span id="threshold-value">128</span></span>
-                <input type="range" id="threshold-slider" class="form-range" min="0" max="255" value="128">
+        <!-- Result & Export Section -->
+        <div id="result-section" class="mt-4" style="display: none;">
+            <h5><i class="fa-solid fa-sliders me-2"></i> Hasil & Pengolahan Warna:</h5>
+            
+            <!-- Preset Filter Buttons -->
+            <div class="btn-group w-100 my-2">
+                <button class="btn btn-sm btn-outline-info active" id="filter-magic">Magic Color</button>
+                <button class="btn btn-sm btn-outline-info" id="filter-bw">B&W Document</button>
+                <button class="btn btn-sm btn-outline-info" id="filter-grayscale">Grayscale</button>
+                <button class="btn btn-sm btn-outline-info" id="filter-original">Asli</button>
             </div>
-            <div class="btn-group-action">
-                <button class="btn btn-primary" id="btn-download">💾 Unduh PNG</button>
-                <button class="btn btn-success" id="btn-share">📤 Share</button>
-                <button class="btn btn-outline-dark" id="btn-reset">⟲ Scan Baru</button>
+
+            <canvas id="result-canvas" class="result-canvas my-3"></canvas>
+
+            <!-- OCR Result Box -->
+            <div class="mb-3">
+                <label class="form-label font-monospace small"><i class="fa-solid fa-file-lines me-1"></i> Hasil Teks OCR:</label>
+                <textarea id="ocr-result" class="form-control bg-dark text-light border-secondary" rows="3" placeholder="Memproses pembacaan teks..."></textarea>
+                <button class="btn btn-sm btn-outline-light mt-1" id="btn-copy-ocr"><i class="fa-regular fa-copy me-1"></i> Salin Teks</button>
+            </div>
+
+            <!-- Multi-page Controls & Export -->
+            <div class="p-3 bg-dark bg-opacity-50 rounded border border-secondary mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>Dokumen Tersimpan: <span id="page-count" class="badge bg-primary">0 Halaman</span></span>
+                    <button class="btn btn-sm btn-warning" id="btn-add-page"><i class="fa-solid fa-plus me-1"></i> Tambah Halaman Lain</button>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-danger flex-grow-1" id="btn-download-pdf"><i class="fa-solid fa-file-pdf me-2"></i> Simpan PDF</button>
+                <button class="btn btn-primary flex-grow-1" id="btn-download-png"><i class="fa-solid fa-file-image me-2"></i> Unduh PNG</button>
+                <button class="btn btn-outline-light" id="btn-reset"><i class="fa-solid fa-rotate-left"></i> Baru</button>
             </div>
         </div>
 
-        <footer>
-            <small>Aplikasi sederhana scan dokumen</small>
-        </footer>
     </div>
 
-    <canvas id="hidden-canvas" style="display: none;"></canvas>
-    <div id="toast-notification" class="toast-notif"></div>
-
+    <!-- External Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <!-- Tesseract.js (OCR Engine) -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <!-- jsPDF (PDF Generator Engine) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
     <script>
         (function() {
+            const { jsPDF } = window.jspdf;
+            
+            // DOM Elements
             const video = document.getElementById('video');
             const btnCamera = document.getElementById('btn-camera-mode');
             const btnUpload = document.getElementById('btn-upload-mode');
@@ -104,56 +201,29 @@
             const cropContainer = document.getElementById('crop-container');
             const imagePreview = document.getElementById('image-preview');
             const btnScan = document.getElementById('btn-scan');
-            const btnResetCrop = document.getElementById('btn-reset-crop');
             const resultSection = document.getElementById('result-section');
             const resultCanvas = document.getElementById('result-canvas');
-            const thresholdSlider = document.getElementById('threshold-slider');
-            const thresholdValue = document.getElementById('threshold-value');
-            const btnDownload = document.getElementById('btn-download');
-            const btnShare = document.getElementById('btn-share');
-            const btnReset = document.getElementById('btn-reset');
-            const hiddenCanvas = document.getElementById('hidden-canvas');
-            const toast = document.getElementById('toast-notification');
-            const cameraErrorMsg = document.getElementById('camera-error-msg');
-
+            const scannerLine = document.getElementById('scanner-line');
+            const ocrResult = document.getElementById('ocr-result');
+            const pageCountLabel = document.getElementById('page-count');
+            
             let cropper = null;
             let stream = null;
-            let currentFacingMode = 'environment'; // Default kamera belakang
+            let currentFacingMode = 'environment';
+            let scannedPages = []; // Array untuk menyimpan multi-page PDF
+            let currentCroppedCanvas = null;
 
-            function showToast(msg, duration = 2000) {
-                toast.textContent = msg;
-                toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), duration);
-            }
-
-            function stopCamera() {
-                if (stream) {
-                    stream.getTracks().forEach(track => track.stop());
-                    stream = null;
-                }
-                btnCapture.disabled = true;
-                video.srcObject = null;
-            }
-
+            // Camera Setup
             async function initCamera() {
-                stopCamera();
+                if (stream) stream.getTracks().forEach(t => t.stop());
                 try {
-                    stream = await navigator.mediaDevices.getUserMedia({
-                        video: { facingMode: currentFacingMode }
-                    });
+                    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode } });
                     video.srcObject = stream;
                     btnCapture.disabled = false;
-                    showToast(`Kamera ${currentFacingMode === 'user' ? 'Depan' : 'Belakang'} aktif`);
                 } catch (err) {
-                    cameraErrorMsg.textContent = "Gagal akses kamera: " + err.message;
+                    alert("Akses kamera gagal: " + err.message);
                 }
             }
-
-            // Event Listener Ganti Kamera
-            btnSwitch.addEventListener('click', () => {
-                currentFacingMode = (currentFacingMode === 'environment') ? 'user' : 'environment';
-                initCamera();
-            });
 
             btnCamera.addEventListener('click', () => {
                 cameraSection.style.display = 'block';
@@ -162,9 +232,14 @@
             });
 
             btnUpload.addEventListener('click', () => {
-                stopCamera();
+                if (stream) stream.getTracks().forEach(t => t.stop());
                 cameraSection.style.display = 'none';
                 uploadSection.style.display = 'block';
+            });
+
+            btnSwitch.addEventListener('click', () => {
+                currentFacingMode = (currentFacingMode === 'environment') ? 'user' : 'environment';
+                initCamera();
             });
 
             btnCapture.addEventListener('click', () => {
@@ -179,7 +254,7 @@
                 const file = e.target.files[0];
                 if (file) {
                     const reader = new FileReader();
-                    reader.onload = (event) => loadImageToCropper(event.target.result);
+                    reader.onload = (evt) => loadImageToCropper(evt.target.result);
                     reader.readAsDataURL(file);
                 }
             });
@@ -189,101 +264,108 @@
                 imagePreview.src = src;
                 cropContainer.style.display = 'block';
                 imagePreview.onload = () => {
-                    cropper = new Cropper(imagePreview, { viewMode: 1, autoCropArea: 0.8 });
+                    cropper = new Cropper(imagePreview, { viewMode: 1, autoCropArea: 0.9 });
                 };
             }
 
+            // Processing Image & Filters
             btnScan.addEventListener('click', () => {
                 if (!cropper) return;
-                const canvas = cropper.getCroppedCanvas();
-                applyThreshold(canvas);
-                resultSection.style.display = 'block';
+                scannerLine.style.display = 'block';
+                
+                setTimeout(() => {
+                    currentCroppedCanvas = cropper.getCroppedCanvas();
+                    applyFilter('magic'); // Default filter Magic Color
+                    scannerLine.style.display = 'none';
+                    resultSection.style.display = 'block';
+                    
+                    // Jalankan OCR Otomatis
+                    runOCR(resultCanvas);
+                }, 1000);
             });
 
-            function applyThreshold(source) {
-                const ctx = hiddenCanvas.getContext('2d');
-                hiddenCanvas.width = source.width;
-                hiddenCanvas.height = source.height;
-                ctx.drawImage(source, 0, 0);
-                
-                const imageData = ctx.getImageData(0, 0, source.width, source.height);
+            function applyFilter(type) {
+                if (!currentCroppedCanvas) return;
+                const ctx = resultCanvas.getContext('2d');
+                resultCanvas.width = currentCroppedCanvas.width;
+                resultCanvas.height = currentCroppedCanvas.height;
+                ctx.drawImage(currentCroppedCanvas, 0, 0);
+
+                const imageData = ctx.getImageData(0, 0, resultCanvas.width, resultCanvas.height);
                 const data = imageData.data;
-                const thresh = parseInt(thresholdSlider.value);
 
                 for (let i = 0; i < data.length; i += 4) {
-                    const gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
-                    const v = gray >= thresh ? 255 : 0;
-                    data[i] = data[i+1] = data[i+2] = v;
+                    let r = data[i], g = data[i+1], b = data[i+2];
+
+                    if (type === 'magic') {
+                        // Magic Color: Tingkatkan kontras dan kecerahan
+                        data[i]     = Math.min(255, (r - 128) * 1.4 + 128 + 10);
+                        data[i+1] = Math.min(255, (g - 128) * 1.4 + 128 + 10);
+                        data[i+2] = Math.min(255, (b - 128) * 1.4 + 128 + 10);
+                    } else if (type === 'bw') {
+                        // High-contrast B&W
+                        let v = (0.2126*r + 0.7152*g + 0.0722*b >= 130) ? 255 : 0;
+                        data[i] = data[i+1] = data[i+2] = v;
+                    } else if (type === 'grayscale') {
+                        let v = 0.2126*r + 0.7152*g + 0.0722*b;
+                        data[i] = data[i+1] = data[i+2] = v;
+                    }
                 }
-                
-                resultCanvas.width = source.width;
-                resultCanvas.height = source.height;
-                resultCanvas.getContext('2d').putImageData(imageData, 0, 0);
+                ctx.putImageData(imageData, 0, 0);
             }
 
-            thresholdSlider.addEventListener('input', () => {
-                thresholdValue.textContent = thresholdSlider.value;
-                if (cropper) applyThreshold(cropper.getCroppedCanvas());
-            });
+            // Event Listeners for Filters
+            document.getElementById('filter-magic').onclick = () => applyFilter('magic');
+            document.getElementById('filter-bw').onclick = () => applyFilter('bw');
+            document.getElementById('filter-grayscale').onclick = () => applyFilter('grayscale');
+            document.getElementById('filter-original').onclick = () => applyFilter('original');
 
-            btnDownload.addEventListener('click', () => {
-                const link = document.createElement('a');
-                link.download = 'scan.png';
-                link.href = resultCanvas.toDataURL();
-                link.click();
-            });
+            // OCR Engine
+            async function runOCR(canvas) {
+                ocrResult.value = "Mengenali teks pada dokumen...";
+                const worker = await Tesseract.createWorker('ind'); // Bahasa Indonesia
+                const ret = await worker.recognize(canvas.toDataURL());
+                ocrResult.value = ret.data.text || "Tidak ada teks yang terdeteksi.";
+                await worker.terminate();
+            }
 
-            btnReset.addEventListener('click', () => location.reload());
-            // Perbaikan Fungsi SHARE hasil scan
-
-            btnShare.addEventListener('click', async () => {
-    if (resultCanvas.width === 0) {
-        showToast('Belum ada hasil scan untuk dibagikan.');
-        return;
-    }
-
-    // 1. Konversi canvas ke Blob
-    resultCanvas.toBlob(async (blob) => {
-        if (!blob) {
-            showToast('Gagal memproses gambar.');
-            return;
-        }
-
-        try {
-            const file = new File([blob], 'scan-dokumen.png', { type: 'image/png' });
-            const shareData = {
-                title: 'Hasil Scan Dokumen',
-                text: 'Berikut adalah hasil scan dokumen saya.',
-                files: [file]
+            document.getElementById('btn-copy-ocr').onclick = () => {
+                navigator.clipboard.writeText(ocrResult.value);
+                alert('Teks berhasil disalin!');
             };
 
-            // 2. Cek apakah browser mendukung Web Share API untuk File
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share(shareData);
-                showToast('Berhasil dibagikan!');
-            } else {
-                throw new Error('Browser tidak mendukung fitur share file.');
-            }
-        } catch (err) {
-            console.error('Share Error:', err);
-            
-            // 3. Fallback jika Share API gagal atau dibatalkan pengguna
-            if (err.name === 'AbortError') {
-                showToast('Berbagi dibatalkan.');
-            } else {
-                // Jika tidak dukung share, tawarkan copy link atau download otomatis
-                if (confirm('Fitur share tidak didukung di browser ini atau koneksi tidak aman (non-HTTPS).\n\nIngin mengunduh gambar saja?')) {
-                    btnDownload.click();
-                }
-            }
-        }
-    }, 'image/png');
-});
+            // Multi-Page PDF Handling
+            document.getElementById('btn-add-page').onclick = () => {
+                scannedPages.push(resultCanvas.toDataURL('image/jpeg', 0.9));
+                pageCountLabel.textContent = `${scannedPages.length} Halaman`;
+                
+                // Reset ke mode awal tanpa reload
+                cropContainer.style.display = 'none';
+                resultSection.style.display = 'none';
+                alert('Halaman disimpan. Silakan ambil atau unggah gambar berikutnya.');
+            };
 
+            document.getElementById('btn-download-pdf').onclick = () => {
+                // Masukkan halaman saat ini jika belum dimasukkan
+                let pagesToExport = [...scannedPages, resultCanvas.toDataURL('image/jpeg', 0.9)];
+                
+                const pdf = new jsPDF();
+                pagesToExport.forEach((imgData, index) => {
+                    if (index > 0) pdf.addPage();
+                    pdf.addImage(imgData, 'JPEG', 10, 10, 190, 0); // Presisi A4 Auto-scale
+                });
+                pdf.save('dokumen-scanned.pdf');
+            };
 
+            document.getElementById('btn-download-png').onclick = () => {
+                const a = document.createElement('a');
+                a.download = 'scan-doc.png';
+                a.href = resultCanvas.toDataURL();
+                a.click();
+            };
+
+            document.getElementById('btn-reset').onclick = () => location.reload();
         })();
     </script>
-    <!-- Tambahkan tombol kembali -->
-    <script src="../tombol-kembali.js"></script>
 </body>
 </html>
