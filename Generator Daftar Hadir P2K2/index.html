@@ -6,6 +6,8 @@
     <title>Generator Daftar Hadir P2K2 - Auto Day</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <!-- Library SheetJS untuk membaca file Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 	<script async src="https://www.googletagmanager.com/gtag/js?id=G-DV25BYV3TL"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -26,6 +28,17 @@
         label { font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333; }
         input { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; width: 100%; box-sizing: border-box; }
         
+        /* Box Input Excel */
+        .excel-box {
+            background-color: #e8f5e9;
+            border: 1px dashed #2e7d32;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .excel-box label { color: #1b5e20; }
+        .excel-info { font-size: 11px; color: #555; margin-top: 4px; }
+
         /* Tombol Generate / Unduh (Merah) */
         .btn-generate { 
             width: 100%; background: #d32f2f; color: white; padding: 15px; border: none; 
@@ -91,12 +104,74 @@
         </div>
     </div>
 
+    <!-- Modul Upload Excel Baru -->
+    <div class="excel-box">
+        <label>Upload Data KPM (Excel / CSV):</label>
+        <input type="file" id="excelFile" accept=".xlsx, .xls, .csv" onchange="handleExcelUpload(event)">
+        <div class="excel-info">
+            * Format Excel ideal memiliki header kolom <b>NAMA</b> dan <b>NIK</b> pada baris pertama (Kolom A & B).
+        </div>
+    </div>
+
     <!-- Dua tombol terpisah untuk Unduh dan Cetak Langsung -->
     <button onclick="generatePDF()" class="btn-generate">UNDUH PDF DAFTAR HADIR</button>
     <button onclick="printPDF()" class="btn-print">PRINT LANGSUNG</button>
 </div>
 
 <script>
+    // Variable global untuk menyimpan data KPM hasil import Excel
+    let dataKpmExcel = [];
+
+    // Fungsi untuk memproses file Excel yang diunggah
+    function handleExcelUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            
+            // Ambil sheet pertama
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            
+            // Konversi sheet ke JSON
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+            dataKpmExcel = [];
+            if (jsonData.length > 0) {
+                // Deteksi apakah baris pertama berisi header nama/nik
+                let startRow = 0;
+                const headerCol0 = String(jsonData[0][0] || '').toLowerCase();
+                const headerCol1 = String(jsonData[0][1] || '').toLowerCase();
+
+                if (headerCol0.includes('nama') || headerCol0.includes('kpm') || headerCol1.includes('nik')) {
+                    startRow = 1; // Lewati baris header
+                }
+
+                for (let i = startRow; i < jsonData.length; i++) {
+                    const row = jsonData[i];
+                    if (row && (row[0] || row[1])) {
+                        dataKpmExcel.push({
+                            nama: String(row[0] || '').trim(),
+                            nik: String(row[1] || '').trim()
+                        });
+                    }
+                }
+
+                if (dataKpmExcel.length > 0) {
+                    // Otomatis update jumlah baris KPM sesuai jumlah data di Excel
+                    document.getElementById('jmlBaris').value = dataKpmExcel.length;
+                    alert(`Berhasil mengimpor ${dataKpmExcel.length} data KPM dari Excel.`);
+                } else {
+                    alert('Tidak ada data KPM yang dapat dibaca dari file Excel.');
+                }
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
     // Fungsi untuk mendapatkan nama hari dalam Bahasa Indonesia
     function getNamaHari(dateStr) {
         if(!dateStr) return "";
@@ -161,29 +236,33 @@
         doc.text("Hari / Tanggal", startX, 44); doc.text(":", dotX, 44); doc.text(`${hari}, ${tgl}`, dotX + 3, 44);
         doc.text("Tempat", startX, 50);        doc.text(":", dotX, 50); doc.text(tempat, dotX + 3, 50);
 
-        // Data Tabel 
+        // Data Tabel (Menambahkan Kolom NIK setelah Nama)
         const bodyData = [];
         for (let i = 1; i <= jml; i++) {
+            // Ambil data nama dan NIK dari hasil impor Excel (jika ada)
+            const kpm = dataKpmExcel[i - 1] || { nama: "", nik: "" };
+            
             if (i % 2 !== 0) {
-                bodyData.push([i, "", `${i}. ...........`, ""]);
+                bodyData.push([i, kpm.nama, kpm.nik, `${i}. ...........`, ""]);
             } else {
-                bodyData.push([i, "", "", `${i}. ...........`]);
+                bodyData.push([i, kpm.nama, kpm.nik, "", `${i}. ...........`]);
             }
         }
 
         doc.autoTable({
             startY: 55,
-            head: [['NO', 'NAMA KPM', 'TANDA TANGAN', '']],
+            head: [['NO', 'NAMA KPM', 'NIK', 'TANDA TANGAN', '']],
             body: bodyData,
             theme: 'grid',
             headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], halign: 'center' },
             columnStyles: {
-                0: { cellWidth: 12, halign: 'center' },
-                1: { cellWidth: 90 },
-                2: { cellWidth: 40 },
-                3: { cellWidth: 40 }
+                0: { cellWidth: 10, halign: 'center' },
+                1: { cellWidth: 55 },
+                2: { cellWidth: 40, halign: 'center' },
+                3: { cellWidth: 37 },
+                4: { cellWidth: 38 }
             },
-            styles: { minCellHeight: 8, valign: 'middle', fontSize: 9 }
+            styles: { minCellHeight: 8, valign: 'middle', fontSize: 8.5 }
         });
 
         // Footer Tanda Tangan 
